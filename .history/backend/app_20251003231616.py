@@ -28,6 +28,14 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 CORS(app)
 
+# Set SQLCipher key
+database_key = os.getenv('DATABASE_KEY', 'default-key')
+@event.listens_for(db.engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if 'sqlcipher' in app.config['SQLALCHEMY_DATABASE_URI']:
+        cursor = dbapi_connection.cursor()
+        cursor.execute(f"PRAGMA key = '{database_key}'")
+        cursor.close()
 
 @app.route('/')
 def hello():
