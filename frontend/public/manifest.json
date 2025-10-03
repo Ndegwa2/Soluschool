@@ -1,0 +1,8 @@
+{
+  "name": "Qreet Platform",
+  "short_name": "Qreet",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000"
+}
