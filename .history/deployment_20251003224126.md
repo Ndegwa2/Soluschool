@@ -1,0 +1,73 @@
+# Qreet Platform - Deployment Setup (Render)
+
+## Overview
+Deployment via Render platform with separate services for frontend and backend.
+
+## Backend (Flask API)
+- **Service Type**: Web Service
+- **Runtime**: Python 3
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `gunicorn app:app`
+- **Environment Variables**:
+  - DATABASE_URL: SQLite file path (use persistent disk)
+  - JWT_SECRET: Random secret key
+  - SMS_API_KEY: Africa's Talking API key
+  - EMAIL_CONFIG: SMTP settings
+
+### Persistent Storage
+- Use Render's persistent disks for SQLite database
+- Mount disk at `/data/qreet.db`
+- Automatic backups via Render's backup feature
+
+## Frontend (Next.js)
+- **Service Type**: Static Site
+- **Build Command**: `npm run build`
+- **Publish Directory**: `out`
+- **Environment Variables**:
+  - API_URL: Backend service URL
+  - NEXT_PUBLIC_API_URL: Public API URL for client-side
+
+### PWA Configuration
+- Ensure service worker is included in build
+- Configure manifest.json for PWA installation
+
+## Database Considerations
+- SQLite is file-based and works with persistent disks
+- For production scaling, consider migrating to PostgreSQL later
+- Render provides automatic database backups
+
+## Environment Setup
+1. Create Render account
+2. Connect GitHub repository
+3. Create web service for Flask backend
+4. Create static site for Next.js frontend
+5. Configure environment variables
+6. Set up custom domain (optional)
+
+## Monitoring & Scaling
+- Render provides basic monitoring
+- Auto-scaling available for web services
+- Logs accessible via Render dashboard
+- Uptime monitoring via Render status page
+
+## Security
+- HTTPS enabled by default
+- Environment variables for secrets
+- CORS configured for frontend-backend communication
+
+## Deployment Process
+1. Push code to GitHub
+2. Render auto-deploys on push to main branch
+3. Database migrations run on deploy (if needed)
+4. Frontend rebuilds and redeploys automatically
+
+## Cost Considerations
+- Free tier: 750 hours/month
+- Paid plans for higher usage
+- Persistent disks: $0.25/GB/month
+- Static sites: Free
+
+## Backup Strategy
+- Render automatic daily backups for persistent disks
+- Manual backups before major updates
+- Export database periodically for local backup
