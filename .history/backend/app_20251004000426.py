@@ -52,11 +52,8 @@ mail = Mail(app)
 # Africa's Talking
 africas_talking_username = os.getenv('AFRICAS_TALKING_USERNAME')
 africas_talking_api_key = os.getenv('AFRICAS_TALKING_API_KEY')
-if africas_talking_username and africas_talking_api_key:
-    at = africastalking.initialize(africas_talking_username, africas_talking_api_key)
-    sms = at.sms
-else:
-    sms = None
+at = africastalking.initialize(africas_talking_username, africas_talking_api_key)
+sms = at.sms
 
 # Encryption key for QR
 encryption_key = os.getenv('ENCRYPTION_KEY', Fernet.generate_key())
@@ -392,7 +389,7 @@ def send_notification():
     db.session.commit()
 
     # Send SMS if phone
-    if user.phone and sms:
+    if user.phone:
         try:
             sms_response = sms.send(data['message'], [user.phone])
         except Exception as e:
@@ -524,48 +521,6 @@ def get_gates(school_id):
     gates = Gate.query.filter_by(school_id=school_id).all()
     result = [{'id': g.id, 'name': g.name, 'location': g.location} for g in gates]
     return jsonify({'success': True, 'gates': result})
-
-# Children
-@app.route('/api/children', methods=['POST'])
-@jwt_required()
-def create_child():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if user.role != 'parent':
-        return jsonify({'success': False, 'error': 'Parent only'}), 403
-
-    schema = ChildSchema()
-    try:
-        data = schema.load(request.get_json())
-    except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
-
-    child = Child(
-        parent_id=user_id,
-        name=data['name'],
-        school_id=data['school_id'],
-        grade=data.get('grade'),
-        date_of_birth=data.get('date_of_birth')
-    )
-    db.session.add(child)
-    db.session.commit()
-    return jsonify({'success': True, 'child_id': child.id})
-
-@app.route('/api/children', methods=['GET'])
-@jwt_required()
-def get_children():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if user.role == 'parent':
-        children = Child.query.filter_by(parent_id=user_id).all()
-    elif user.role in ['admin', 'guard']:
-        # For admins, perhaps all, but for simplicity, none or filter
-        children = []
-    else:
-        children = []
-
-    result = [{'id': c.id, 'name': c.name, 'school_id': c.school_id, 'grade': c.grade, 'date_of_birth': c.date_of_birth.isoformat() if c.date_of_birth else None} for c in children]
-    return jsonify({'success': True, 'children': result})
 
 
 @app.route('/')

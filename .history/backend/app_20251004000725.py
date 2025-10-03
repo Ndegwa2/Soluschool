@@ -392,7 +392,7 @@ def send_notification():
     db.session.commit()
 
     # Send SMS if phone
-    if user.phone and sms:
+    if user.phone:
         try:
             sms_response = sms.send(data['message'], [user.phone])
         except Exception as e:

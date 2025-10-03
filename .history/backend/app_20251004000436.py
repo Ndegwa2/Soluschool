@@ -52,11 +52,8 @@ mail = Mail(app)
 # Africa's Talking
 africas_talking_username = os.getenv('AFRICAS_TALKING_USERNAME')
 africas_talking_api_key = os.getenv('AFRICAS_TALKING_API_KEY')
-if africas_talking_username and africas_talking_api_key:
-    at = africastalking.initialize(africas_talking_username, africas_talking_api_key)
-    sms = at.sms
-else:
-    sms = None
+at = africastalking.initialize(africas_talking_username, africas_talking_api_key)
+sms = at.sms
 
 # Encryption key for QR
 encryption_key = os.getenv('ENCRYPTION_KEY', Fernet.generate_key())
@@ -392,7 +389,7 @@ def send_notification():
     db.session.commit()
 
     # Send SMS if phone
-    if user.phone and sms:
+    if user.phone:
         try:
             sms_response = sms.send(data['message'], [user.phone])
         except Exception as e:

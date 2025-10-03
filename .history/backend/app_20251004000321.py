@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_mail import Mail, Message
+from flask_mail import Mail
 import africastalking
 from marshmallow import Schema, fields, ValidationError
 import qrcode
@@ -24,14 +24,6 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///qreet.db')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'dev-secret-key')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Mail config
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 
 from models import db
 db.init_app(app)
@@ -52,11 +44,8 @@ mail = Mail(app)
 # Africa's Talking
 africas_talking_username = os.getenv('AFRICAS_TALKING_USERNAME')
 africas_talking_api_key = os.getenv('AFRICAS_TALKING_API_KEY')
-if africas_talking_username and africas_talking_api_key:
-    at = africastalking.initialize(africas_talking_username, africas_talking_api_key)
-    sms = at.sms
-else:
-    sms = None
+at = africastalking.initialize(africas_talking_username, africas_talking_api_key)
+sms = at.sms
 
 # Encryption key for QR
 encryption_key = os.getenv('ENCRYPTION_KEY', Fernet.generate_key())
@@ -94,21 +83,6 @@ class NotificationSendSchema(Schema):
     user_id = fields.Int(required=True)
     type = fields.Str(required=True)
     message = fields.Str(required=True)
-
-class SchoolSchema(Schema):
-    name = fields.Str(required=True)
-    address = fields.Str()
-
-class GateSchema(Schema):
-    school_id = fields.Int(required=True)
-    name = fields.Str(required=True)
-    location = fields.Str()
-
-class ChildSchema(Schema):
-    name = fields.Str(required=True)
-    school_id = fields.Int(required=True)
-    grade = fields.Str()
-    date_of_birth = fields.Date()
 
 # Auth routes
 @app.route('/api/auth/register', methods=['POST'])
@@ -367,205 +341,6 @@ def add_log():
     db.session.add(log)
     db.session.commit()
     return jsonify({'success': True, 'log_id': log.id})
-
-# Notifications
-@app.route('/api/notifications/send', methods=['POST'])
-@jwt_required()
-def send_notification():
-    schema = NotificationSendSchema()
-    try:
-        data = schema.load(request.get_json())
-    except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
-
-    user = User.query.get(data['user_id'])
-    if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
-
-    # Save to DB
-    notification = Notification(
-        user_id=data['user_id'],
-        type=data['type'],
-        message=data['message']
-    )
-    db.session.add(notification)
-    db.session.commit()
-
-    # Send SMS if phone
-    if user.phone and sms:
-        try:
-            sms_response = sms.send(data['message'], [user.phone])
-        except Exception as e:
-            pass  # Log error
-
-    # Send email if email
-    if user.email:
-        try:
-            msg = Message(data['type'], recipients=[user.email])
-            msg.body = data['message']
-            mail.send(msg)
-        except Exception as e:
-            pass
-
-    return jsonify({'success': True, 'notification_id': notification.id})
-
-@app.route('/api/notifications', methods=['GET'])
-@jwt_required()
-def get_notifications():
-    user_id = get_jwt_identity()
-    notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.sent_at.desc()).all()
-    result = [{
-        'id': n.id,
-        'type': n.type,
-        'message': n.message,
-        'sent_at': n.sent_at.isoformat(),
-        'status': n.status
-    } for n in notifications]
-    return jsonify({'success': True, 'notifications': result})
-
-# Analytics
-@app.route('/api/analytics/summary', methods=['GET'])
-@jwt_required()
-def analytics_summary():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if user.role != 'admin':
-        return jsonify({'success': False, 'error': 'Admin only'}), 403
-
-    school_id = request.args.get('school_id', type=int)
-    period = request.args.get('period', 'daily')
-
-    now = datetime.utcnow()
-    if period == 'daily':
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    elif period == 'weekly':
-        start = now - timedelta(days=now.weekday())
-        start = start.replace(hour=0, minute=0, second=0, microsecond=0)
-
-    query = Log.query.join(Gate).filter(Log.status == 'approved', Log.timestamp >= start)
-    if school_id:
-        query = query.filter(Gate.school_id == school_id)
-
-    total_pickups = query.count()
-
-    from sqlalchemy import func
-    peak_times = db.session.query(func.extract('hour', Log.timestamp).label('hour'), func.count(Log.id).label('count')).join(Gate).filter(Log.status == 'approved', Log.timestamp >= start)
-    if school_id:
-        peak_times = peak_times.filter(Gate.school_id == school_id)
-    peak_times = peak_times.group_by(func.extract('hour', Log.timestamp)).order_by(func.count(Log.id).desc()).first()
-    peak_hour = int(peak_times.hour) if peak_times else None
-
-    visitors = query.distinct(Log.qr_id).count()
-
-    return jsonify({'success': True, 'total_pickups': total_pickups, 'peak_hour': peak_hour, 'visitors': visitors})
-
-@app.route('/api/analytics/chart-data', methods=['GET'])
-@jwt_required()
-def analytics_chart_data():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if user.role != 'admin':
-        return jsonify({'success': False, 'error': 'Admin only'}), 403
-
-    metric = request.args.get('metric')
-    school_id = request.args.get('school_id', type=int)
-
-    from sqlalchemy import func
-    if metric == 'pickups_by_hour':
-        query = db.session.query(func.extract('hour', Log.timestamp).label('hour'), func.count(Log.id).label('count')).join(Gate).filter(Log.status == 'approved')
-        if school_id:
-            query = query.filter(Gate.school_id == school_id)
-        data = query.group_by(func.extract('hour', Log.timestamp)).order_by('hour').all()
-        result = [{'hour': int(row.hour), 'count': row.count} for row in data]
-    else:
-        result = []
-
-    return jsonify({'success': True, 'data': result})
-
-# Schools & Gates
-@app.route('/api/schools', methods=['GET'])
-@jwt_required()
-def get_schools():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if user.role != 'admin':
-        return jsonify({'success': False, 'error': 'Admin only'}), 403
-
-    schools = School.query.all()
-    result = [{'id': s.id, 'name': s.name, 'address': s.address} for s in schools]
-    return jsonify({'success': True, 'schools': result})
-
-@app.route('/api/gates', methods=['POST'])
-@jwt_required()
-def create_gate():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if user.role != 'admin':
-        return jsonify({'success': False, 'error': 'Admin only'}), 403
-
-    schema = GateSchema()
-    try:
-        data = schema.load(request.get_json())
-    except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
-
-    gate = Gate(
-        school_id=data['school_id'],
-        name=data['name'],
-        location=data.get('location')
-    )
-    db.session.add(gate)
-    db.session.commit()
-    return jsonify({'success': True, 'gate_id': gate.id})
-
-@app.route('/api/gates/<int:school_id>', methods=['GET'])
-@jwt_required()
-def get_gates(school_id):
-    gates = Gate.query.filter_by(school_id=school_id).all()
-    result = [{'id': g.id, 'name': g.name, 'location': g.location} for g in gates]
-    return jsonify({'success': True, 'gates': result})
-
-# Children
-@app.route('/api/children', methods=['POST'])
-@jwt_required()
-def create_child():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if user.role != 'parent':
-        return jsonify({'success': False, 'error': 'Parent only'}), 403
-
-    schema = ChildSchema()
-    try:
-        data = schema.load(request.get_json())
-    except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
-
-    child = Child(
-        parent_id=user_id,
-        name=data['name'],
-        school_id=data['school_id'],
-        grade=data.get('grade'),
-        date_of_birth=data.get('date_of_birth')
-    )
-    db.session.add(child)
-    db.session.commit()
-    return jsonify({'success': True, 'child_id': child.id})
-
-@app.route('/api/children', methods=['GET'])
-@jwt_required()
-def get_children():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if user.role == 'parent':
-        children = Child.query.filter_by(parent_id=user_id).all()
-    elif user.role in ['admin', 'guard']:
-        # For admins, perhaps all, but for simplicity, none or filter
-        children = []
-    else:
-        children = []
-
-    result = [{'id': c.id, 'name': c.name, 'school_id': c.school_id, 'grade': c.grade, 'date_of_birth': c.date_of_birth.isoformat() if c.date_of_birth else None} for c in children]
-    return jsonify({'success': True, 'children': result})
 
 
 @app.route('/')
