@@ -2,32 +2,54 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import ProtectedRoute from '../components/common/ProtectedRoute'
 import { apiClient } from '../lib/api'
+import { Search, ChevronUp, ChevronDown } from 'lucide-react'
 
 const fetcher = (url) => apiClient.get(url)
 
 export default function History() {
   const { data: logs, error } = useSWR('/api/logs', fetcher)
   const [filter, setFilter] = useState('')
+  const [sortKey, setSortKey] = useState('timestamp')
+  const [sortDirection, setSortDirection] = useState('desc')
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDirection('asc')
+    }
+  }
 
   const filteredLogs = logs?.filter(log =>
     !filter || log.child_name.toLowerCase().includes(filter.toLowerCase())
-  ) || []
+  ).sort((a, b) => {
+    let aVal = a[sortKey]
+    let bVal = b[sortKey]
+    if (sortKey === 'timestamp') {
+      aVal = new Date(aVal)
+      bVal = new Date(bVal)
+    }
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
+    return 0
+  }) || []
 
   return (
     <ProtectedRoute allowedRoles={['parent', 'admin']}>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #43cea2, #185a9d)' }}>
         <div className="max-w-6xl mx-auto py-6 px-4">
           <h1 className="text-3xl font-bold mb-6">Pickup History</h1>
 
           <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <div className="flex items-center space-x-4 mb-4">
-              <label className="font-medium">Filter by Child:</label>
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder="Enter child name"
-                className="p-2 border rounded flex-1"
+                placeholder="Search by child name"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -36,23 +58,35 @@ export default function History() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Child
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onClick={() => handleSort('child_name')}>
+                    <div className="flex items-center space-x-1">
+                      <span>Child</span>
+                      {sortKey === 'child_name' && (sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Gate
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onClick={() => handleSort('gate_name')}>
+                    <div className="flex items-center space-x-1">
+                      <span>Gate</span>
+                      {sortKey === 'gate_name' && (sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Timestamp
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onClick={() => handleSort('timestamp')}>
+                    <div className="flex items-center space-x-1">
+                      <span>Timestamp</span>
+                      {sortKey === 'timestamp' && (sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onClick={() => handleSort('status')}>
+                    <div className="flex items-center space-x-1">
+                      <span>Status</span>
+                      {sortKey === 'status' && (sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                    </div>
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredLogs.map((log) => (
-                  <tr key={log.id}>
+              <tbody className="bg-white">
+                {filteredLogs.map((log, index) => (
+                  <tr key={log.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-6 py-4 whitespace-nowrap">{log.child_name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{log.gate_name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">

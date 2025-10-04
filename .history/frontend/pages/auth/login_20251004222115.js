@@ -27,7 +27,7 @@ export default function Login() {
       <h2>Welcome Back</h2>
       <p>Log in to your account</p>
 
-      <AuthForm isLogin={true} />
+      <AuthForm isLogin={true} onSuccess={handleSuccess} />
 
       <Link href="/auth/register">Don't have an account? Sign up</Link>
     </div>
