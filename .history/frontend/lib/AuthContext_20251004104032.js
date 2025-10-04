@@ -9,7 +9,6 @@ export const useAuth = () => useContext(AuthContext)
 export const AuthProvider = ({ children }) => {
   const [isAuth, setIsAuth] = useState(false)
   const [role, setRole] = useState(null)
-  const router = useRouter()
 
   useEffect(() => {
     setIsAuth(isAuthenticated())
@@ -20,14 +19,11 @@ export const AuthProvider = ({ children }) => {
     logout()
     setIsAuth(false)
     setRole(null)
-    router.push('/auth/login')
   }
 
   const refreshAuth = () => {
-    console.log('refreshAuth called')
     setIsAuth(isAuthenticated())
     setRole(getUserRole())
-    console.log('Auth state updated: isAuth:', isAuthenticated(), 'role:', getUserRole())
   }
 
   return (

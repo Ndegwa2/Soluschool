@@ -2,13 +2,11 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { apiClient } from '../../lib/api'
 import { login } from '../../lib/auth'
-import { useAuth } from '../../lib/AuthContext'
 
 const AuthForm = ({ isLogin = true, onSuccess }) => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm()
-  const { refreshAuth } = useAuth()
 
   const onSubmit = async (data) => {
     setError('')
@@ -19,8 +17,6 @@ const AuthForm = ({ isLogin = true, onSuccess }) => {
       console.log('Auth response:', response)
       login(response.token)
       console.log('Token stored')
-      refreshAuth() // Update AuthContext state
-      console.log('AuthContext refreshed')
       onSuccess && onSuccess()
     } catch (err) {
       setError(err.message || 'An error occurred')

@@ -107,15 +107,36 @@ code {
   text-decoration: underline;
 }
 
-/* Responsive tweaks */
+/* Small screen adjustments */
 @media (max-width: 480px) {
   .form-container {
-    padding: 2rem 1.2rem;
+    padding: 2rem 1.5rem;
     width: 100%;
   }
 
   .form-container h2 {
     font-size: 1.3rem;
+  }
+
+  .form-container p {
+    font-size: 0.85rem;
+  }
+
+  .form-container input,
+  .form-container button {
+    font-size: 0.9rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+  body {
+    padding: 1.5rem;
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 400px;
   }
 }
 

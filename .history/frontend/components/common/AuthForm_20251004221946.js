@@ -8,7 +8,6 @@ const AuthForm = ({ isLogin = true, onSuccess }) => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm()
-  const { refreshAuth } = useAuth()
 
   const onSubmit = async (data) => {
     setError('')
@@ -19,8 +18,6 @@ const AuthForm = ({ isLogin = true, onSuccess }) => {
       console.log('Auth response:', response)
       login(response.token)
       console.log('Token stored')
-      refreshAuth() // Update AuthContext state
-      console.log('AuthContext refreshed')
       onSuccess && onSuccess()
     } catch (err) {
       setError(err.message || 'An error occurred')

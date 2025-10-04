@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import AuthForm from '../../components/common/AuthForm'
 import { isAuthenticated, getUserRole } from '../../lib/auth'
-import { useAuth } from '../../lib/AuthContext'
 
 export default function Login() {
   const router = useRouter()
@@ -37,14 +36,20 @@ export default function Login() {
   }
 
   return (
-    <div className="form-container">
+    <div className="login-container">
+      {/* Logo / Title */}
       <img src="/logo.png" alt="App Logo" />
       <h2>Welcome Back</h2>
       <p>Log in to your account</p>
 
       <AuthForm isLogin={true} onSuccess={handleSuccess} />
 
-      <Link href="/auth/register">Don't have an account? Sign up</Link>
+      {/* Links */}
+      <a href="#">Forgot password?</a>
+      <div>
+        Don’t have an account?{" "}
+        <Link href="/auth/register">Sign up</Link>
+      </div>
     </div>
   )
 }

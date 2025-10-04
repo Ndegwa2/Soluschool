@@ -30,7 +30,7 @@ export default function Register() {
       <h2>Register</h2>
       <p>Create your account</p>
       <AuthForm isLogin={false} onSuccess={handleSuccess} />
-      <Link href="/auth/login">Already have an account? Login</Link>
+      <a href="/auth/login">Already have an account? Login</a>
     </div>
   )
 }

@@ -1,9 +1,7 @@
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
-import Link from 'next/link'
 import AuthForm from '../../components/common/AuthForm'
 import { isAuthenticated, getUserRole } from '../../lib/auth'
-import { useAuth } from '../../lib/AuthContext'
 
 export default function Login() {
   const router = useRouter()
@@ -37,14 +35,26 @@ export default function Login() {
   }
 
   return (
-    <div className="form-container">
-      <img src="/logo.png" alt="App Logo" />
-      <h2>Welcome Back</h2>
-      <p>Log in to your account</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+        {/* Logo / Title */}
+        <div className="text-center mb-6">
+          <img src="/logo.png" alt="App Logo" className="mx-auto w-16 h-16" />
+          <h1 className="text-2xl font-bold text-gray-800">Welcome Back</h1>
+          <p className="text-gray-500 text-sm">Log in to your account</p>
+        </div>
 
-      <AuthForm isLogin={true} onSuccess={handleSuccess} />
+        <AuthForm isLogin={true} onSuccess={handleSuccess} />
 
-      <Link href="/auth/register">Don't have an account? Sign up</Link>
+        {/* Links */}
+        <div className="mt-4 text-sm text-center text-gray-600">
+          <a href="#" className="text-blue-600 hover:underline">Forgot password?</a>
+        </div>
+        <div className="mt-2 text-sm text-center text-gray-600">
+          Don’t have an account?{" "}
+          <a href="/auth/register" className="text-blue-600 font-medium hover:underline">Sign up</a>
+        </div>
+      </div>
     </div>
   )
 }

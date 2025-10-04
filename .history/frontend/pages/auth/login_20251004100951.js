@@ -1,9 +1,7 @@
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
-import Link from 'next/link'
 import AuthForm from '../../components/common/AuthForm'
 import { isAuthenticated, getUserRole } from '../../lib/auth'
-import { useAuth } from '../../lib/AuthContext'
 
 export default function Login() {
   const router = useRouter()
@@ -24,9 +22,7 @@ export default function Login() {
   }, [router])
 
   const handleSuccess = () => {
-    console.log('handleSuccess called')
     const role = getUserRole()
-    console.log('Role for redirect:', role)
     if (role === 'parent') {
       router.push('/dashboard')
     } else if (role === 'guard') {
@@ -37,14 +33,16 @@ export default function Login() {
   }
 
   return (
-    <div className="form-container">
-      <img src="/logo.png" alt="App Logo" />
-      <h2>Welcome Back</h2>
-      <p>Log in to your account</p>
-
-      <AuthForm isLogin={true} onSuccess={handleSuccess} />
-
-      <Link href="/auth/register">Don't have an account? Sign up</Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="text-center">
+        <AuthForm isLogin={true} onSuccess={handleSuccess} />
+        <p className="mt-4 text-sm text-gray-600">
+          Do not have an account?{' '}
+          <a href="/auth/register" className="text-blue-500 hover:text-blue-700">
+            Register here
+          </a>
+        </p>
+      </div>
     </div>
   )
 }

@@ -24,10 +24,8 @@ export const AuthProvider = ({ children }) => {
   }
 
   const refreshAuth = () => {
-    console.log('refreshAuth called')
     setIsAuth(isAuthenticated())
     setRole(getUserRole())
-    console.log('Auth state updated: isAuth:', isAuthenticated(), 'role:', getUserRole())
   }
 
   return (

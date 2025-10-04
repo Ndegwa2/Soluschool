@@ -65,8 +65,8 @@ cipher = Fernet(encryption_key)
 # Schemas
 class RegisterSchema(Schema):
     name = fields.Str(required=True)
-    phone = fields.Str()
-    email = fields.Email(required=True)
+    phone = fields.Str(required=True)
+    email = fields.Email()
     password = fields.Str(required=True, validate=lambda p: len(p) >= 6)
     role = fields.Str(required=True, validate=lambda r: r in ['parent', 'admin', 'guard'])
     school_id = fields.Int()
@@ -121,15 +121,15 @@ def register():
         return jsonify({'success': False, 'error': err.messages}), 400
 
     # Check if user exists
-    existing = User.query.filter_by(email=data['email']).first()
+    existing = User.query.filter((User.phone == data['phone']) | (User.email == data.get('email'))).first()
     if existing:
         return jsonify({'success': False, 'error': 'User already exists'}), 400
 
     hashed = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     user = User(
         name=data['name'],
-        phone=data.get('phone'),
-        email=data['email'],
+        phone=data['phone'],
+        email=data.get('email'),
         password_hash=hashed,
         role=data['role'],
         school_id=data.get('school_id')
@@ -149,11 +149,11 @@ def login():
     except ValidationError as err:
         return jsonify({'success': False, 'error': err.messages}), 400
 
-    user = User.query.filter_by(email=data['email']).first()
+    user = User.query.filter((User.phone == data['phone_or_email']) | (User.email == data['phone_or_email'])).first()
     if not user or not bcrypt.check_password_hash(user.password_hash, data['password']):
         return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
 
-    token = create_access_token(identity=user.id, additional_claims={'role': user.role})
+    token = create_access_token(identity=user.id)
     return jsonify({'success': True, 'token': token, 'user': {'id': user.id, 'name': user.name, 'role': user.role}})
 
 # QR routes

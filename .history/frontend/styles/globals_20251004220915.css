@@ -52,15 +52,15 @@ code {
 }
 
 
-/* Inputs and selects */
-.form-container input,
+/* Inputs */
+.form-container input[type="email"],
+.form-container input[type="password"],
 .form-container select {
   width: 100%;
   padding: 0.8rem;
   margin: 0.5rem 0;
   border: 1px solid #ccc;
   border-radius: 8px;
-  font-size: 0.9rem;
   outline: none;
   transition: border 0.3s;
 }
@@ -107,15 +107,36 @@ code {
   text-decoration: underline;
 }
 
-/* Responsive tweaks */
+/* Small screen adjustments */
 @media (max-width: 480px) {
   .form-container {
-    padding: 2rem 1.2rem;
+    padding: 2rem 1.5rem;
     width: 100%;
   }
 
   .form-container h2 {
     font-size: 1.3rem;
+  }
+
+  .form-container p {
+    font-size: 0.85rem;
+  }
+
+  .form-container input,
+  .form-container button {
+    font-size: 0.9rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+  body {
+    padding: 1.5rem;
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 400px;
   }
 }
 

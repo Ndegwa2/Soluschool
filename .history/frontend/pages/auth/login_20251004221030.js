@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import AuthForm from '../../components/common/AuthForm'
 import { isAuthenticated, getUserRole } from '../../lib/auth'
-import { useAuth } from '../../lib/AuthContext'
 
 export default function Login() {
   const router = useRouter()

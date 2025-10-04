@@ -20,7 +20,7 @@ code {
 }
 
 /* Container card */
-.form-container {
+.login-container {
   background: #fff;
   padding: 2.5rem;
   border-radius: 12px;
@@ -32,52 +32,43 @@ code {
 }
 
 /* Logo */
-.form-container img {
+.login-container img {
   width: 60px;
   margin-bottom: 1rem;
 }
 
 /* Heading */
-.form-container h2 {
+.login-container h2 {
   margin-bottom: 0.5rem;
   font-size: 1.5rem;
   color: #333;
 }
 
 /* Subtitle */
-.form-container p {
+.login-container p {
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
   color: #666;
 }
 
-
-/* Inputs and selects */
-.form-container input,
-.form-container select {
+/* Inputs */
+.login-container input[type="email"],
+.login-container input[type="password"] {
   width: 100%;
   padding: 0.8rem;
   margin: 0.5rem 0;
   border: 1px solid #ccc;
   border-radius: 8px;
-  font-size: 0.9rem;
   outline: none;
   transition: border 0.3s;
 }
 
-.form-container input:focus,
-.form-container select:focus {
+.login-container input:focus {
   border-color: #4facfe;
 }
 
-/* Error messages */
-.form-container .error {
-  color: red;
-  font-size: 0.8rem;
-}
-
 /* Button */
-.form-container button {
+.login-container button {
   width: 100%;
   padding: 0.9rem;
   margin-top: 1rem;
@@ -90,12 +81,12 @@ code {
   transition: background 0.3s;
 }
 
-.form-container button:hover {
+.login-container button:hover {
   background: #009ffd;
 }
 
 /* Links */
-.form-container a {
+.login-container a {
   display: block;
   margin-top: 1rem;
   font-size: 0.85rem;
@@ -103,19 +94,40 @@ code {
   text-decoration: none;
 }
 
-.form-container a:hover {
+.login-container a:hover {
   text-decoration: underline;
 }
 
-/* Responsive tweaks */
+/* Small screen adjustments */
 @media (max-width: 480px) {
-  .form-container {
-    padding: 2rem 1.2rem;
+  .login-container {
+    padding: 2rem 1.5rem;
     width: 100%;
   }
 
-  .form-container h2 {
+  .login-container h2 {
     font-size: 1.3rem;
+  }
+
+  .login-container p {
+    font-size: 0.85rem;
+  }
+
+  .login-container input,
+  .login-container button {
+    font-size: 0.9rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+  body {
+    padding: 1.5rem;
+  }
+
+  .login-container {
+    width: 100%;
+    max-width: 400px;
   }
 }
 

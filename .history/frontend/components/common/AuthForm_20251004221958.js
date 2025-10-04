@@ -19,8 +19,6 @@ const AuthForm = ({ isLogin = true, onSuccess }) => {
       console.log('Auth response:', response)
       login(response.token)
       console.log('Token stored')
-      refreshAuth() // Update AuthContext state
-      console.log('AuthContext refreshed')
       onSuccess && onSuccess()
     } catch (err) {
       setError(err.message || 'An error occurred')
