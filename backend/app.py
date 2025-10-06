@@ -522,6 +522,37 @@ def create_school():
     db.session.commit()
     return jsonify({'success': True, 'school_id': school.id})
 
+@app.route('/api/users', methods=['GET'])
+@jwt_required()
+def get_users():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Admin only'}), 403
+
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 10, type=int)
+    role_filter = request.args.get('role')
+    school_id_filter = request.args.get('school_id', type=int)
+
+    query = User.query
+    if role_filter:
+        query = query.filter_by(role=role_filter)
+    if school_id_filter:
+        query = query.filter_by(school_id=school_id_filter)
+
+    total = query.count()
+    users = query.offset((page - 1) * limit).limit(limit).all()
+    result = [{
+        'id': u.id,
+        'name': u.name,
+        'email': u.email,
+        'phone': u.phone,
+        'role': u.role,
+        'school_id': u.school_id
+    } for u in users]
+    return jsonify({'success': True, 'users': result, 'total': total, 'page': page, 'limit': limit})
+
 @app.route('/api/gates', methods=['POST'])
 @jwt_required()
 def create_gate():
