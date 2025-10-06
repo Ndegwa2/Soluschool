@@ -17,6 +17,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import event
 from models import User, Child, School, QRCode, Gate, Log, Notification
+from sqlalchemy.orm import joinedload
 
 load_dotenv()
 
@@ -65,30 +66,30 @@ cipher = Fernet(encryption_key)
 # Schemas
 class RegisterSchema(Schema):
     name = fields.Str(required=True)
-    phone = fields.Str()
+    phone = fields.Str(allow_none=True)
     email = fields.Email(required=True)
     password = fields.Str(required=True, validate=lambda p: len(p) >= 6)
     role = fields.Str(required=True, validate=lambda r: r in ['parent', 'admin', 'guard'])
-    school_id = fields.Int()
+    school_id = fields.Int(allow_none=True)
 
 class LoginSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True)
 
 class GenerateQRSchema(Schema):
-    child_id = fields.Int()
+    child_id = fields.Int(allow_none=True)
     is_guest = fields.Bool()
-    expires_at = fields.DateTime()
+    expires_at = fields.DateTime(allow_none=True)
 
 class ScanSchema(Schema):
     qr_data = fields.Str(required=True)
     gate_id = fields.Int(required=True)
 
 class LogSchema(Schema):
-    qr_id = fields.Int()
+    qr_id = fields.Int(allow_none=True)
     gate_id = fields.Int(required=True)
     status = fields.Str(required=True, validate=lambda s: s in ['approved', 'denied', 'escalated'])
-    notes = fields.Str()
+    notes = fields.Str(allow_none=True)
 
 class NotificationSendSchema(Schema):
     user_id = fields.Int(required=True)
@@ -97,18 +98,18 @@ class NotificationSendSchema(Schema):
 
 class SchoolSchema(Schema):
     name = fields.Str(required=True)
-    address = fields.Str()
+    address = fields.Str(allow_none=True)
 
 class GateSchema(Schema):
     school_id = fields.Int(required=True)
     name = fields.Str(required=True)
-    location = fields.Str()
+    location = fields.Str(allow_none=True)
 
 class ChildSchema(Schema):
     name = fields.Str(required=True)
     school_id = fields.Int(required=True)
-    grade = fields.Str()
-    date_of_birth = fields.Date()
+    grade = fields.Str(allow_none=True)
+    date_of_birth = fields.Date(allow_none=True)
 
 # Auth routes
 @app.route('/api/auth/register', methods=['POST'])
@@ -118,7 +119,7 @@ def register():
     try:
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
+        return jsonify({'success': False, 'error': err.messages}), 422
 
     # Check if user exists
     existing = User.query.filter_by(email=data['email']).first()
@@ -147,7 +148,7 @@ def login():
     try:
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
+        return jsonify({'success': False, 'error': err.messages}), 422
 
     user = User.query.filter_by(email=data['email']).first()
     if not user or not bcrypt.check_password_hash(user.password_hash, data['password']):
@@ -166,7 +167,7 @@ def generate_qr():
     try:
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
+        return jsonify({'success': False, 'error': err.messages}), 422
 
     # Check permissions
     if user.role == 'parent':
@@ -268,7 +269,7 @@ def verify_scan():
     try:
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
+        return jsonify({'success': False, 'error': err.messages}), 422
 
     # Decrypt QR data
     try:
@@ -317,17 +318,21 @@ def verify_scan():
 def get_logs():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    if user.role != 'admin':
-        return jsonify({'success': False, 'error': 'Admin only'}), 403
+    if user.role not in ['admin', 'parent']:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
 
     school_id = request.args.get('school_id', type=int)
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     status_filter = request.args.get('status')
 
-    query = Log.query.join(Gate)
-    if school_id:
-        query = query.filter(Gate.school_id == school_id)
+    query = Log.query.join(Gate).outerjoin(QRCode).outerjoin(Child).options(joinedload(Log.qr_code).joinedload(QRCode.child), joinedload(Log.gate))
+    if user.role == 'parent':
+        query = query.filter(Child.parent_id == user_id)
+    elif user.role == 'admin':
+        if school_id:
+            query = query.filter(Gate.school_id == school_id)
+
     if date_from:
         query = query.filter(Log.timestamp >= datetime.fromisoformat(date_from))
     if date_to:
@@ -338,9 +343,8 @@ def get_logs():
     logs = query.all()
     result = [{
         'id': log.id,
-        'qr_id': log.qr_id,
-        'gate_id': log.gate_id,
-        'scanned_by': log.scanned_by,
+        'child_name': log.qr_code.child.name if log.qr_code and log.qr_code.child else 'Guest',
+        'gate_name': log.gate.name,
         'status': log.status,
         'timestamp': log.timestamp.isoformat(),
         'notes': log.notes
@@ -355,7 +359,7 @@ def add_log():
     try:
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
+        return jsonify({'success': False, 'error': err.messages}), 422
 
     log = Log(
         qr_id=data.get('qr_id'),
@@ -376,7 +380,7 @@ def send_notification():
     try:
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
+        return jsonify({'success': False, 'error': err.messages}), 422
 
     user = User.query.get(data['user_id'])
     if not user:
@@ -495,6 +499,29 @@ def get_schools():
     result = [{'id': s.id, 'name': s.name, 'address': s.address} for s in schools]
     return jsonify({'success': True, 'schools': result})
 
+@app.route('/api/schools', methods=['POST'])
+@jwt_required()
+def create_school():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Admin only'}), 403
+
+    schema = SchoolSchema()
+    try:
+        data = schema.load(request.get_json())
+    except ValidationError as err:
+        return jsonify({'success': False, 'error': err.messages}), 422
+
+    school = School(
+        name=data['name'],
+        address=data.get('address'),
+        admin_id=user_id
+    )
+    db.session.add(school)
+    db.session.commit()
+    return jsonify({'success': True, 'school_id': school.id})
+
 @app.route('/api/gates', methods=['POST'])
 @jwt_required()
 def create_gate():
@@ -507,7 +534,7 @@ def create_gate():
     try:
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
+        return jsonify({'success': False, 'error': err.messages}), 422
 
     gate = Gate(
         school_id=data['school_id'],
@@ -538,7 +565,7 @@ def create_child():
     try:
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return jsonify({'success': False, 'error': err.messages}), 400
+        return jsonify({'success': False, 'error': err.messages}), 422
 
     child = Child(
         parent_id=user_id,

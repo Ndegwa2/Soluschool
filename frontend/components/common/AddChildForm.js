@@ -35,20 +35,11 @@ const AddChildForm = ({ onSuccess, onCancel }) => {
           {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium">Class</label>
+          <label className="block text-sm font-medium">Grade</label>
           <input
-            {...register('class', { required: 'Class is required' })}
+            {...register('grade')}
             className="w-full p-2 border rounded"
             type="text"
-          />
-          {errors.class && <p className="text-red-500 text-sm">{errors.class.message}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Photo URL (optional)</label>
-          <input
-            {...register('photo')}
-            className="w-full p-2 border rounded"
-            type="url"
           />
         </div>
         {error && <p className="text-red-500">{error}</p>}
