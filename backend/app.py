@@ -655,6 +655,10 @@ def get_children():
     return jsonify({'success': True, 'children': result})
 
 
+@app.route('/api/health')
+def health():
+    return {'status': 'ok'}
+
 @app.route('/')
 def hello():
     return {'message': 'Hello, Qreet!'}

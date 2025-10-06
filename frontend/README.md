@@ -1,5 +1,10 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Development Setup
+
+### Development Proxy
+All `/api/*` requests are proxied to `localhost:5000` via `next.config.mjs` for seamless development.
+
 ## Getting Started
 
 First, run the development server:
