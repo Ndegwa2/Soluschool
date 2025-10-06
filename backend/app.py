@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -25,6 +26,16 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///qreet.db')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'dev-secret-key')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
 
 # Mail config
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
@@ -138,6 +149,7 @@ def register():
     db.session.add(user)
     db.session.commit()
 
+    app.logger.info(f'User registered: {user.email} with role {user.role}')
     token = create_access_token(identity=user.id)
     return jsonify({'success': True, 'token': token, 'user': {'id': user.id, 'name': user.name, 'role': user.role}})
 
@@ -154,6 +166,7 @@ def login():
     if not user or not bcrypt.check_password_hash(user.password_hash, data['password']):
         return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
 
+    app.logger.info(f'User logged in: {user.email}')
     token = create_access_token(identity=user.id, additional_claims={'role': user.role})
     return jsonify({'success': True, 'token': token, 'user': {'id': user.id, 'name': user.name, 'role': user.role}})
 
@@ -277,6 +290,7 @@ def verify_scan():
         decrypted_data = cipher.decrypt(encrypted_data)
         qr_info = json.loads(decrypted_data.decode())
     except Exception as e:
+        app.logger.warning(f'Invalid QR data received: {e}')
         return jsonify({'success': False, 'status': 'denied', 'error': 'Invalid QR'}), 400
 
     # Validate
@@ -310,6 +324,7 @@ def verify_scan():
     db.session.add(log)
     db.session.commit()
 
+    app.logger.info(f'QR scan logged: status {status} at gate {data["gate_id"]} by user {user_id}')
     return jsonify({'success': True, 'status': status, 'qr_info': qr_info})
 
 # Logging
@@ -400,7 +415,7 @@ def send_notification():
         try:
             sms_response = sms.send(data['message'], [user.phone])
         except Exception as e:
-            pass  # Log error
+            app.logger.error(f'Failed to send SMS to {user.phone}: {e}')
 
     # Send email if email
     if user.email:
@@ -409,7 +424,7 @@ def send_notification():
             msg.body = data['message']
             mail.send(msg)
         except Exception as e:
-            pass
+            app.logger.error(f'Failed to send email to {user.email}: {e}')
 
     return jsonify({'success': True, 'notification_id': notification.id})
 
