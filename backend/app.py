@@ -57,6 +57,20 @@ with app.app_context():
 
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+# JWT error handlers
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    return jsonify({'success': False, 'error': 'Invalid token'}), 401
+
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_payload):
+    return jsonify({'success': False, 'error': 'Token expired'}), 401
+
+@jwt.unauthorized_loader
+def unauthorized_callback(error):
+    return jsonify({'success': False, 'error': 'Missing token'}), 401
+
 CORS(app)
 limiter = Limiter(get_remote_address, app=app)
 mail = Mail(app)
