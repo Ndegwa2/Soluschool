@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '../../lib/AuthContext'
 
 const Header = () => {
-  const { isAuth, logout } = useAuth()
+  const { isAuth, role, logout } = useAuth()
   const router = useRouter()
 
   if (!isAuth) return null
@@ -60,14 +60,16 @@ const Header = () => {
             textUnderlineOffset: '6px',
             textDecoration: router.pathname === '/dashboard' ? 'underline' : 'none'
           }}>Dashboard</Link>
-          <Link href="/schools" style={{
-            textDecoration: 'none',
-            color: router.pathname === '/schools' ? '#0ea5e9' : '#0b1220',
-            opacity: router.pathname === '/schools' ? 1 : 0.85,
-            fontWeight: 600,
-            textUnderlineOffset: '6px',
-            textDecoration: router.pathname === '/schools' ? 'underline' : 'none'
-          }}>Schools</Link>
+          {role === 'admin' && (
+            <Link href="/schools" style={{
+              textDecoration: 'none',
+              color: router.pathname === '/schools' ? '#0ea5e9' : '#0b1220',
+              opacity: router.pathname === '/schools' ? 1 : 0.85,
+              fontWeight: 600,
+              textUnderlineOffset: '6px',
+              textDecoration: router.pathname === '/schools' ? 'underline' : 'none'
+            }}>Schools</Link>
+          )}
           <Link href="/users" style={{
             textDecoration: 'none',
             color: router.pathname === '/users' ? '#0ea5e9' : '#0b1220',

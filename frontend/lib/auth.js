@@ -26,6 +26,17 @@ export const getUserRole = () => {
   }
 }
 
+export const getUserId = () => {
+  const token = getToken()
+  if (!token) return null
+  try {
+    const decoded = jwtDecode(token)
+    return decoded.id
+  } catch {
+    return null
+  }
+}
+
 export const login = (token) => {
   localStorage.setItem('token', token)
 }
