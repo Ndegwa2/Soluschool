@@ -251,7 +251,7 @@ def list_qr():
         else:
             query = query.filter_by(user_id=user_id)
     qrs = query.filter_by(is_active=True).all()
-    result = [{'id': qr.id, 'child_id': qr.child_id, 'is_guest': qr.is_guest, 'expires_at': qr.expires_at.isoformat() if qr.expires_at else None} for qr in qrs]
+    result = [{'id': qr.id, 'child_id': qr.child_id, 'is_guest': qr.is_guest, 'expires_at': qr.expires_at.isoformat() if qr.expires_at else None, 'qr_data': qr.qr_data} for qr in qrs]
     return jsonify({'success': True, 'qrs': result})
 
 @app.route('/api/qr/<int:qr_id>/revoke', methods=['PUT'])
