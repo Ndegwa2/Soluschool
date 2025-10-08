@@ -87,8 +87,6 @@ export default function Scan() {
   const onScanSuccess = async (decodedText) => {
     console.log('QR Code scanned:', decodedText)
 
-    await stopScanner()
-
     const response = await apiClient.post('/api/verify/scan', {
       qr_data: decodedText,
       gate_id: 1 // Default gate ID
@@ -96,7 +94,12 @@ export default function Scan() {
 
     if (response.success) {
       showResult(response.data)
-      showToast('QR code validated successfully', 'success')
+      if (response.data.status === 'approved') {
+        await stopScanner()
+        showToast('QR code validated successfully', 'success')
+      } else {
+        showToast('Access denied', 'error')
+      }
       loadLogs()
     } else {
       if (response.error === 'Invalid token') {

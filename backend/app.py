@@ -347,12 +347,16 @@ def verify_scan():
             return jsonify({'success': False, 'status': 'denied', 'error': 'Child not found'}), 400
         # Check if child is in guard's school
         if child.school_id != user.school_id:
-            return jsonify({'success': False, 'status': 'denied', 'error': 'Child not in your school'}), 403
-        # For plain child_id, always approve (no expiration)
-        status = 'approved'
-        notes = 'Scanned child ID'
+            status = 'denied'
+            notes = 'Child not in your school'
+        else:
+            status = 'approved'
+            notes = 'Scanned child ID'
         qr_info = {'child_id': child_id, 'is_guest': False}
         qr = None  # No QR record for plain child_id
+        child_data = {'name': child.name, 'school_id': child.school_id}
+        parent = User.query.get(child.parent_id)
+        parent_data = {'name': parent.name, 'phone': parent.phone} if parent else None
     else:
         # Decrypt QR data
         try:
@@ -383,6 +387,13 @@ def verify_scan():
             status = 'denied'
             notes = 'Inactive QR'
 
+        if status == 'denied' and qr_info.get('child_id'):
+            child = Child.query.get(qr_info['child_id'])
+            if child:
+                child_data = {'name': child.name, 'school_id': child.school_id}
+                parent = User.query.get(child.parent_id)
+                parent_data = {'name': parent.name, 'phone': parent.phone} if parent else None
+
     # Log the scan
     log = Log(
         qr_id=qr.id if qr else None,
@@ -395,7 +406,11 @@ def verify_scan():
     db.session.commit()
 
     app.logger.info(f'QR scan logged: status {status} at gate {data["gate_id"]} by user {user_id}')
-    return jsonify({'success': True, 'status': status, 'qr_info': qr_info})
+    response_data = {'success': True, 'status': status, 'qr_info': qr_info}
+    if 'child_data' in locals():
+        response_data['child'] = child_data
+        response_data['parent'] = parent_data
+    return jsonify(response_data)
 
 @app.route('/api/manual-entry', methods=['POST'])
 @jwt_required()
