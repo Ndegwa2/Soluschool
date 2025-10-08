@@ -92,6 +92,8 @@ export default function Scan() {
       gate_id: 1 // Default gate ID
     })
 
+    console.log('API response:', response)
+
     if (response.success) {
       showResult(response.data)
       if (response.data.status === 'approved') {

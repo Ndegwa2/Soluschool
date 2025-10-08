@@ -328,6 +328,9 @@ def revoke_qr(qr_id):
 def verify_scan():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
+    print("User:", user_id, "Role:", user.role if user else None)
+    data = request.get_json()
+    print("Data received:", data)
     if user.role not in ['guard', 'admin', 'parent']:
         return jsonify({'success': False, 'error': 'Unauthorized'}), 403
 
@@ -410,6 +413,7 @@ def verify_scan():
     if 'child_data' in locals():
         response_data['child'] = child_data
         response_data['parent'] = parent_data
+    print("Response data:", response_data)
     return jsonify(response_data)
 
 @app.route('/api/manual-entry', methods=['POST'])
