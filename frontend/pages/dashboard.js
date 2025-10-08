@@ -85,7 +85,7 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute allowedRoles={['parent', 'admin']}>
-      <main className="container">
+      <div className="container">
         <h1 className="page-title">Dashboard</h1>
         <div className="page-sub">Quick snapshot of todays activity and tools.</div>
 
@@ -213,7 +213,7 @@ export default function Dashboard() {
             </div>
           </aside>
         </div>
-      </main>
+      </div>
     </ProtectedRoute>
   )
 }
