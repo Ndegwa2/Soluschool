@@ -1,6 +1,7 @@
 import { jwtDecode } from 'jwt-decode'
 
 export const isAuthenticated = () => {
+  if (typeof window === 'undefined') return false
   const token = localStorage.getItem('token')
   if (!token) return false
   try {
@@ -12,6 +13,7 @@ export const isAuthenticated = () => {
 }
 
 export const getToken = () => {
+  if (typeof window === 'undefined') return null
   return localStorage.getItem('token')
 }
 
@@ -38,11 +40,13 @@ export const getUserId = () => {
 }
 
 export const login = (token, user) => {
+  if (typeof window === 'undefined') return
   localStorage.setItem('token', token)
   localStorage.setItem('user', JSON.stringify(user))
 }
 
 export const getUserSchoolId = () => {
+  if (typeof window === 'undefined') return null
   const user = localStorage.getItem('user')
   if (!user) return null
   try {
@@ -54,6 +58,7 @@ export const getUserSchoolId = () => {
 }
 
 export const logout = () => {
+  if (typeof window === 'undefined') return
   localStorage.removeItem('token')
   localStorage.removeItem('user')
 }
