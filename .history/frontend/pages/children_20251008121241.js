@@ -1,0 +1,75 @@
+import React, { useState } from 'react'
+import useSWR from 'swr'
+import ProtectedRoute from '../components/common/ProtectedRoute'
+import ChildCard from '../components/common/ChildCard'
+import AddChildForm from '../components/common/AddChildForm'
+import { apiClient } from '../lib/api'
+
+const fetcher = (url) => apiClient.get(url)
+
+export default function Children() {
+  const { data: children, error, mutate } = useSWR('/api/children', fetcher)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [editingChild, setEditingChild] = useState(null)
+
+  const handleDelete = async (id) => {
+    if (confirm('Are you sure you want to delete this child?')) {
+      try {
+        await apiClient.delete(`/api/children/${id}`)
+        mutate()
+      } catch (err) {
+        alert('Error deleting child')
+      }
+    }
+  }
+
+  const handleEdit = (child) => {
+    setEditingChild(child)
+    // For now, just log; implement edit form later if needed
+    console.log('Edit child:', child)
+  }
+
+  const handleAddSuccess = () => {
+    setShowAddForm(false)
+    mutate()
+  }
+
+  return (
+    <ProtectedRoute allowedRoles={['parent']}>
+      <div className="min-h-screen bg-gray-100">
+        <div className="max-w-4xl mx-auto py-6 px-4">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">My Children</h1>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Add Child
+            </button>
+          </div>
+
+          {showAddForm && (
+            <div className="mb-6">
+              <AddChildForm onSuccess={handleAddSuccess} onCancel={() => setShowAddForm(false)} />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {children?.map((child) => (
+              <ChildCard
+                key={child.id}
+                child={child}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+
+          {children?.length === 0 && !error && (
+            <p className="text-center text-gray-500 mt-8">No children added yet.</p>
+          )}
+        </div>
+      </div>
+    </ProtectedRoute>
+  )
+}
