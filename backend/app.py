@@ -79,6 +79,11 @@ CORS(app)
 limiter = Limiter(get_remote_address, app=app)
 mail = Mail(app)
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f'Unhandled exception: {e}')
+    return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
 @app.before_request
 def log_request_info():
     if request.method != 'OPTIONS':
@@ -181,6 +186,7 @@ def register():
         school_id=data.get('school_id')
     )
     db.session.add(user)
+    db.session.flush()  # Flush to get user.id
 
     # Create children if provided
     if data.get('children'):
