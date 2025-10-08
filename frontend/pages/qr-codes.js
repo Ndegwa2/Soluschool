@@ -14,13 +14,17 @@ const fetcher = async (url) => {
 
 export default function QRCodes() {
   const { data: qrCodes, error, mutate } = useSWR('/api/qr/list', fetcher)
+  const { data: children } = useSWR('/api/children', fetcher)
   const [generating, setGenerating] = useState(false)
+  const [selectedChildId, setSelectedChildId] = useState('')
 
   const generateQR = async () => {
     setGenerating(true)
-    const response = await apiClient.post('/api/qr/generate', {})
+    const payload = selectedChildId ? { child_id: parseInt(selectedChildId) } : {}
+    const response = await apiClient.post('/api/qr/generate', payload)
     if (response.success) {
       mutate()
+      setSelectedChildId('') // Reset selection after successful generation
     } else {
       alert('Error generating QR code: ' + response.error)
     }
@@ -54,55 +58,102 @@ export default function QRCodes() {
     }
   }
 
+  const regenerateQR = async (childId) => {
+    if (confirm('Are you sure you want to regenerate the QR code for this child? The old one will be revoked.')) {
+      setGenerating(true)
+      const payload = { child_id: childId }
+      const response = await apiClient.post('/api/qr/generate', payload)
+      if (response.success) {
+        mutate()
+      } else {
+        alert('Error regenerating QR code: ' + response.error)
+      }
+      setGenerating(false)
+    }
+  }
+
   return (
     <ProtectedRoute allowedRoles={['parent', 'guard']}>
-      <div className="min-h-screen bg-gray-100">
-        <div className="max-w-4xl mx-auto py-6 px-4">
-          <h1 className="text-3xl font-bold mb-6">QR Codes</h1>
-
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 className="text-xl font-semibold mb-4">Generate New QR Code</h2>
+      <div className="container">
+        <div className="header-section">
+          <h1>QR Codes</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <select
+              value={selectedChildId}
+              onChange={(e) => setSelectedChildId(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '2px solid #e5e7eb',
+                background: '#fff',
+                fontSize: '14px',
+                minWidth: '150px'
+              }}
+            >
+              <option value="">Select Child (Optional)</option>
+              {children?.children?.map((child) => (
+                <option key={child.id} value={child.id}>
+                  {child.name}
+                </option>
+              ))}
+            </select>
             <button
               onClick={generateQR}
               disabled={generating}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+              className="add-child-btn primary"
             >
               {generating ? 'Generating...' : 'Generate QR Code'}
             </button>
           </div>
+        </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Active QR Codes</h2>
-            <div className="space-y-4">
-              {qrCodes?.map((qr) => (
-                <div key={qr.id} className="flex items-center justify-between p-4 border rounded">
-                  <div className="flex items-center space-x-4">
-                    <img src={`data:image/png;base64,${qr.qr_data}`} alt="QR Code" className="w-16 h-16" />
-                    <div>
-                      <p className="font-medium">ID: {qr.id}</p>
-                      <p className="text-sm text-gray-600">Child: {qr.child_id || 'Guest'}</p>
-                      <p className="text-sm text-gray-600">Expires: {qr.expires_at ? new Date(qr.expires_at).toLocaleString() : 'Never'}</p>
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">Active QR Codes</div>
+            <div className="card-sub">Manage your QR codes</div>
+          </div>
+          <div className="card-body">
+            <div className="grid" style={{ gap: '16px' }}>
+              {qrCodes?.qrs?.map((qr) => (
+                <div key={qr.id} className="card" style={{ padding: '16px', border: '1px solid rgba(2,6,23,.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <img src={`data:image/png;base64,${qr.qr_data}`} alt="QR Code" style={{ width: '64px', height: '64px', borderRadius: '8px' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '600', marginBottom: '4px' }}>ID: {qr.id}</div>
+                      <div style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '2px' }}>
+                        Child: {qr.child_id ? (children?.children?.find(c => c.id === qr.child_id)?.name || `ID: ${qr.child_id}`) : 'Guest'}
+                      </div>
+                      <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Expires: {qr.expires_at ? new Date(qr.expires_at).toLocaleString() : 'Never'}</div>
                     </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => downloadQR(qr)}
-                      className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-                    >
-                      Download
-                    </button>
-                    <button
-                      onClick={() => emailQR(qr.id)}
-                      className="bg-purple-500 text-white px-3 py-1 rounded text-sm hover:bg-purple-600"
-                    >
-                      Email
-                    </button>
-                    <button
-                      onClick={() => revokeQR(qr.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-                    >
-                      Revoke
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => downloadQR(qr)}
+                        style={{ padding: '8px 12px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}
+                      >
+                        Download
+                      </button>
+                      <button
+                        onClick={() => emailQR(qr.id)}
+                        style={{ padding: '8px 12px', background: 'var(--brand-2)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}
+                      >
+                        Email
+                      </button>
+                      {qr.child_id && (
+                        <button
+                          onClick={() => regenerateQR(qr.child_id)}
+                          disabled={generating}
+                          style={{ padding: '8px 12px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}
+                        >
+                          Regenerate
+                        </button>
+                      )}
+                      <button
+                        onClick={() => revokeQR(qr.id)}
+                        style={{ padding: '8px 12px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}
+                      >
+                        Revoke
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -221,7 +221,7 @@ def login():
 @app.route('/api/qr/generate', methods=['POST'])
 @jwt_required()
 def generate_qr():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     schema = GenerateQRSchema()
     try:
@@ -286,7 +286,7 @@ def generate_qr():
 @app.route('/api/qr/list', methods=['GET'])
 @jwt_required()
 def list_qr():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     query = QRCode.query
     if user.role == 'parent':
@@ -304,7 +304,7 @@ def list_qr():
 @app.route('/api/qr/<int:qr_id>/revoke', methods=['PUT'])
 @jwt_required()
 def revoke_qr(qr_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     qr = QRCode.query.get(qr_id)
     if not qr:
@@ -428,7 +428,7 @@ def manual_entry():
 @app.route('/api/logs', methods=['GET'])
 @jwt_required()
 def get_logs():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     if user.role not in ['admin', 'parent', 'guard']:
         return jsonify({'success': False, 'error': 'Unauthorized'}), 403
@@ -472,7 +472,7 @@ def get_logs():
 @app.route('/api/logs', methods=['POST'])
 @jwt_required()
 def add_log():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     schema = LogSchema()
     try:
         data = schema.load(request.get_json())
@@ -534,7 +534,7 @@ def send_notification():
 @app.route('/api/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.sent_at.desc()).all()
     result = [{
         'id': n.id,
@@ -714,7 +714,7 @@ def get_gates(school_id):
 @app.route('/api/children', methods=['POST'])
 @jwt_required()
 def create_child():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     if user.role != 'parent':
         return jsonify({'success': False, 'error': 'Parent only'}), 403
@@ -748,7 +748,7 @@ def create_child():
 @app.route('/api/children', methods=['GET'])
 @jwt_required()
 def get_children():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     claims = get_jwt()
     app.logger.info(f'get_children called by user_id: {user_id}, claims: {claims}')
     user = User.query.get(user_id)
@@ -770,7 +770,7 @@ def get_children():
 @app.route('/api/children/<int:child_id>', methods=['DELETE'])
 @jwt_required()
 def delete_child(child_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     if user.role != 'parent':
         return jsonify({'success': False, 'error': 'Parent only'}), 403
