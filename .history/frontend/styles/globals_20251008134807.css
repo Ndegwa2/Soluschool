@@ -1,8 +1,8 @@
 :root {
-  --bg-grad-a: #1e293b;
-  --bg-grad-b: #334155;
+  --bg-grad-a: #3dd0b3;
+  --bg-grad-b: #0867a6;
   --surface: #ffffff;
-  --text: #f8fafc;
+  --text: #0b1220;
   --muted: #6b7280;
   --brand: #10b981;
   --brand-2: #0ea5e9;
@@ -17,7 +17,7 @@ body {
   margin: 0;
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: var(--text);
-  background: linear-gradient(180deg, var(--bg-grad-a), var(--bg-grad-b)) fixed;
+  background: linear-gradient(135deg, var(--bg-grad-a), var(--bg-grad-b)) fixed;
 }
 
 /* ====== SHELL ====== */
@@ -591,23 +591,6 @@ body{
   background-color: #4f46e5;
 }
 
-.add-child-btn.primary {
-  background-color: #10b981;
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.add-child-btn.primary:hover {
-  background-color: #059669;
-}
-
-.add-child-btn.large {
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
 /* Form container */
 .add-child-form {
   background-color: rgba(255, 255, 255, 0.2);
@@ -700,34 +683,20 @@ body{
   background: linear-gradient(135deg, #5b5ee1, #6c63ff);
   color: #fff;
   text-align: center;
-  padding: 2rem 1rem;
-}
-
-@media (min-width: 640px) {
-  .children-container {
-    padding: 2rem;
-  }
-}
-
-.children-container .header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 900px;
-  margin-bottom: 2rem;
+  padding: 2rem;
 }
 
 .children-container h1 {
+  margin-bottom: 2rem;
   font-size: 2rem;
   font-weight: 600;
-  margin: 0;
 }
 
 .children-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
+  justify-content: center;
   width: 100%;
   max-width: 900px;
 }
@@ -755,15 +724,10 @@ body{
   text-transform: capitalize;
 }
 
-.grade-badge {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-bottom: 1rem;
+.child-card p {
+  font-size: 0.95rem;
+  margin: 0.3rem 0;
+  color: #e0e0e0;
 }
 
 .card-actions {
@@ -772,30 +736,14 @@ body{
   justify-content: space-between;
 }
 
-.qr-code-container {
-  margin: 1rem 0;
-  text-align: center;
-}
-
-.qr-code {
-  width: 100px;
-  height: 100px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.icon-btn {
+.edit-btn,
+.delete-btn {
   border: none;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   transition: background 0.25s ease, transform 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
 }
 
 .edit-btn {
@@ -816,85 +764,4 @@ body{
 .delete-btn:hover {
   background-color: #d32f2f;
   transform: scale(1.05);
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #fff;
-}
-
-.empty-illustration {
-  margin-bottom: 1.5rem;
-  opacity: 0.7;
-}
-
-.empty-illustration svg {
-  color: #e0e0e0;
-}
-
-.empty-state h3 {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
-.empty-state p {
-  font-size: 1rem;
-  color: #e0e0e0;
-  margin-bottom: 2rem;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Loading Skeleton */
-.loading-state {
-  width: 100%;
-  max-width: 900px;
-}
-
-.skeleton-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.skeleton-card {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 1.5rem 2rem;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-.skeleton-line {
-  height: 1.2rem;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-}
-
-.skeleton-line.short {
-  width: 60%;
-}
-
-.skeleton-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 1rem;
-}
-
-.skeleton-btn {
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-}
-
-@keyframes shimmer {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
 }

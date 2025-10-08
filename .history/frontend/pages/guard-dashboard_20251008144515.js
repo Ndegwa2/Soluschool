@@ -28,7 +28,8 @@ export default function Scan() {
   useEffect(() => {
     return () => {
       if (scanner) {
-        scanner.stop().catch(console.error)
+        scanner.stop()
+        scanner.clear()
       }
     }
   }, [scanner])
@@ -74,6 +75,7 @@ export default function Scan() {
     if (scanner) {
       try {
         await scanner.stop()
+        scanner.clear()
         setScanner(null)
         setScanning(false)
       } catch (error) {
@@ -89,8 +91,6 @@ export default function Scan() {
       qr_data: decodedText,
       gate_id: 1 // Default gate ID
     })
-
-    console.log('API response:', response)
 
     if (response.success) {
       showResult(response.data)

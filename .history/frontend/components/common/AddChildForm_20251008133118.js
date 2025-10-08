@@ -1,19 +1,18 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { apiClient } from '../../lib/api'
-import { useAuth } from '../../lib/AuthContext'
 
 const AddChildForm = ({ onSuccess, onCancel }) => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { register, handleSubmit, formState: { errors }, reset } = useForm()
-  const { schoolId } = useAuth()
 
   const onSubmit = async (data) => {
-    const childData = { ...data, school_id: schoolId }
+    console.log('Sending child data:', data)
     setError('')
     setLoading(true)
-    const response = await apiClient.post('/api/children', childData)
+    const response = await apiClient.post('/api/children', data)
+    console.log('API response:', response)
     if (response.success) {
       reset()
       onSuccess && onSuccess()
@@ -42,7 +41,7 @@ const AddChildForm = ({ onSuccess, onCancel }) => {
             type="text"
           />
         </div>
-        {error && <p className="text-red-500">{typeof error === 'object' ? Object.values(error).flat().join(', ') : error}</p>}
+        {error && <p className="text-red-500">{error}</p>}
         <div className="form-buttons">
           <button
             type="submit"

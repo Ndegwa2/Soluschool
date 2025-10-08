@@ -11,9 +11,12 @@ const AddChildForm = ({ onSuccess, onCancel }) => {
 
   const onSubmit = async (data) => {
     const childData = { ...data, school_id: schoolId }
+    console.log('schoolId from context:', schoolId)
+    console.log('childData:', childData)
     setError('')
     setLoading(true)
     const response = await apiClient.post('/api/children', childData)
+    console.log('response:', response)
     if (response.success) {
       reset()
       onSuccess && onSuccess()

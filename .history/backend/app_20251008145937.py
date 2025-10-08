@@ -349,8 +349,8 @@ def verify_scan():
         child = Child.query.get(child_id)
         if not child:
             return jsonify({'success': False, 'status': 'denied', 'error': 'Child not found'}), 400
-        # Check if child is in guard's school (if guard has a school assigned)
-        if user.school_id and child.school_id != user.school_id:
+        # Check if child is in guard's school
+        if child.school_id != user.school_id:
             status = 'denied'
             notes = 'Child not in your school'
         else:

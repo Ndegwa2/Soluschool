@@ -11,9 +11,11 @@ const AddChildForm = ({ onSuccess, onCancel }) => {
 
   const onSubmit = async (data) => {
     const childData = { ...data, school_id: schoolId }
+    console.log('Sending child data:', childData)
     setError('')
     setLoading(true)
     const response = await apiClient.post('/api/children', childData)
+    console.log('API response:', response)
     if (response.success) {
       reset()
       onSuccess && onSuccess()
@@ -42,7 +44,7 @@ const AddChildForm = ({ onSuccess, onCancel }) => {
             type="text"
           />
         </div>
-        {error && <p className="text-red-500">{typeof error === 'object' ? Object.values(error).flat().join(', ') : error}</p>}
+        {error && <p className="text-red-500">{error}</p>}
         <div className="form-buttons">
           <button
             type="submit"

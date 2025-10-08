@@ -1,8 +1,8 @@
 :root {
-  --bg-grad-a: #1e293b;
-  --bg-grad-b: #334155;
+  --bg-grad-a: #3dd0b3;
+  --bg-grad-b: #0867a6;
   --surface: #ffffff;
-  --text: #f8fafc;
+  --text: #0b1220;
   --muted: #6b7280;
   --brand: #10b981;
   --brand-2: #0ea5e9;
@@ -17,7 +17,7 @@ body {
   margin: 0;
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: var(--text);
-  background: linear-gradient(180deg, var(--bg-grad-a), var(--bg-grad-b)) fixed;
+  background: linear-gradient(135deg, var(--bg-grad-a), var(--bg-grad-b)) fixed;
 }
 
 /* ====== SHELL ====== */

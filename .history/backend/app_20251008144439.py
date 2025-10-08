@@ -279,8 +279,7 @@ def generate_qr():
     qr_code = QRCode(
         user_id=user_id,
         child_id=data.get('child_id'),
-        qr_data=qr_string,
-        qr_image=qr_base64,
+        qr_data=qr_base64,
         is_active=True,
         expires_at=data.get('expires_at'),
         is_guest=data.get('is_guest', False)
@@ -305,7 +304,7 @@ def list_qr():
         else:
             query = query.filter_by(user_id=user_id)
     qrs = query.filter_by(is_active=True).all()
-    result = [{'id': qr.id, 'child_id': qr.child_id, 'is_guest': qr.is_guest, 'expires_at': qr.expires_at.isoformat() if qr.expires_at else None, 'qr_data': qr.qr_image} for qr in qrs]
+    result = [{'id': qr.id, 'child_id': qr.child_id, 'is_guest': qr.is_guest, 'expires_at': qr.expires_at.isoformat() if qr.expires_at else None, 'qr_data': qr.qr_data} for qr in qrs]
     return jsonify({'success': True, 'qrs': result})
 
 @app.route('/api/qr/<int:qr_id>/revoke', methods=['PUT'])
@@ -329,9 +328,6 @@ def revoke_qr(qr_id):
 def verify_scan():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    print("User:", user_id, "Role:", user.role if user else None)
-    data = request.get_json()
-    print("Data received:", data)
     if user.role not in ['guard', 'admin', 'parent']:
         return jsonify({'success': False, 'error': 'Unauthorized'}), 403
 
@@ -349,8 +345,8 @@ def verify_scan():
         child = Child.query.get(child_id)
         if not child:
             return jsonify({'success': False, 'status': 'denied', 'error': 'Child not found'}), 400
-        # Check if child is in guard's school (if guard has a school assigned)
-        if user.school_id and child.school_id != user.school_id:
+        # Check if child is in guard's school
+        if child.school_id != user.school_id:
             status = 'denied'
             notes = 'Child not in your school'
         else:
@@ -391,13 +387,6 @@ def verify_scan():
             status = 'denied'
             notes = 'Inactive QR'
 
-        if status == 'denied' and qr_info.get('child_id'):
-            child = Child.query.get(qr_info['child_id'])
-            if child:
-                child_data = {'name': child.name, 'school_id': child.school_id}
-                parent = User.query.get(child.parent_id)
-                parent_data = {'name': parent.name, 'phone': parent.phone} if parent else None
-
     # Log the scan
     log = Log(
         qr_id=qr.id if qr else None,
@@ -414,7 +403,6 @@ def verify_scan():
     if 'child_data' in locals():
         response_data['child'] = child_data
         response_data['parent'] = parent_data
-    print("Response data:", response_data)
     return jsonify(response_data)
 
 @app.route('/api/manual-entry', methods=['POST'])

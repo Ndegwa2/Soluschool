@@ -28,7 +28,9 @@ export default function Scan() {
   useEffect(() => {
     return () => {
       if (scanner) {
-        scanner.stop().catch(console.error)
+        scanner.stop().then(() => {
+          scanner.clear()
+        }).catch(console.error)
       }
     }
   }, [scanner])

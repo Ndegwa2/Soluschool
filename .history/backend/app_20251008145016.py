@@ -279,8 +279,7 @@ def generate_qr():
     qr_code = QRCode(
         user_id=user_id,
         child_id=data.get('child_id'),
-        qr_data=qr_string,
-        qr_image=qr_base64,
+        qr_data=qr_base64,
         is_active=True,
         expires_at=data.get('expires_at'),
         is_guest=data.get('is_guest', False)
@@ -305,7 +304,7 @@ def list_qr():
         else:
             query = query.filter_by(user_id=user_id)
     qrs = query.filter_by(is_active=True).all()
-    result = [{'id': qr.id, 'child_id': qr.child_id, 'is_guest': qr.is_guest, 'expires_at': qr.expires_at.isoformat() if qr.expires_at else None, 'qr_data': qr.qr_image} for qr in qrs]
+    result = [{'id': qr.id, 'child_id': qr.child_id, 'is_guest': qr.is_guest, 'expires_at': qr.expires_at.isoformat() if qr.expires_at else None, 'qr_data': qr.qr_data} for qr in qrs]
     return jsonify({'success': True, 'qrs': result})
 
 @app.route('/api/qr/<int:qr_id>/revoke', methods=['PUT'])
@@ -349,8 +348,8 @@ def verify_scan():
         child = Child.query.get(child_id)
         if not child:
             return jsonify({'success': False, 'status': 'denied', 'error': 'Child not found'}), 400
-        # Check if child is in guard's school (if guard has a school assigned)
-        if user.school_id and child.school_id != user.school_id:
+        # Check if child is in guard's school
+        if child.school_id != user.school_id:
             status = 'denied'
             notes = 'Child not in your school'
         else:
