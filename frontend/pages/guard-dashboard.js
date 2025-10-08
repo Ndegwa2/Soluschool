@@ -1,21 +1,21 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import useSWR from 'swr'
 import ProtectedRoute from '../components/common/ProtectedRoute'
 import { apiClient } from '../lib/api'
 import { getUserSchoolId } from '../lib/auth'
+import { useAuth } from '../lib/AuthContext'
 
 export default function Scan() {
-  const [scanner, setScanner] = useState(null)
-  const [scanning, setScanning] = useState(false)
-  const [result, setResult] = useState(null)
-  const [selectedGate, setSelectedGate] = useState('')
-  const [currentView, setCurrentView] = useState('scanner')
-  const [logs, setLogs] = useState([])
-  const [analytics, setAnalytics] = useState(null)
-  const [toast, setToast] = useState(null)
-  const schoolId = getUserSchoolId()
-  const { data: gates } = useSWR(schoolId ? `/api/gates/${schoolId}` : null, apiClient.get)
+   const [scanner, setScanner] = useState(null)
+   const [scanning, setScanning] = useState(false)
+   const [result, setResult] = useState(null)
+   const [currentView, setCurrentView] = useState('scanner')
+   const [logs, setLogs] = useState([])
+   const [analytics, setAnalytics] = useState(null)
+   const [toast, setToast] = useState(null)
+   const schoolId = getUserSchoolId()
+   const { logout } = useAuth()
 
   useEffect(() => {
     if (currentView === 'logs') {
@@ -34,15 +34,12 @@ export default function Scan() {
     }
   }, [scanner])
 
+
   const switchView = (viewId) => {
     setCurrentView(viewId)
   }
 
   const startScanner = async () => {
-    if (!selectedGate) {
-      showToast('Please select a gate', 'error')
-      return
-    }
 
     if (scanner) {
       console.log('Scanner already initialized')
@@ -95,7 +92,7 @@ export default function Scan() {
     try {
       const response = await apiClient.post('/api/verify/scan', {
         qr_data: decodedText,
-        gate_id: selectedGate
+        gate_id: 1 // Default gate ID
       })
 
       if (response.success) {
@@ -104,11 +101,15 @@ export default function Scan() {
         loadLogs()
       }
     } catch (error) {
-      showToast(error.message || 'Validation failed', 'error')
-      showResult({
-        status: 'denied',
-        reason: error.message
-      })
+      if (error.message === 'Invalid token') {
+        logout()
+      } else {
+        showToast(error.message || 'Validation failed', 'error')
+        showResult({
+          status: 'denied',
+          reason: error.message
+        })
+      }
     }
   }
 
@@ -144,6 +145,9 @@ export default function Scan() {
       }
     } catch (error) {
       console.error('Failed to load logs:', error)
+      if (error.message === 'Invalid token') {
+        logout()
+      }
     }
   }
 
@@ -156,6 +160,9 @@ export default function Scan() {
       }
     } catch (error) {
       console.error('Failed to load analytics:', error)
+      if (error.message === 'Invalid token') {
+        logout()
+      }
     }
   }
 
@@ -169,7 +176,7 @@ export default function Scan() {
       const response = await apiClient.post('/api/manual-entry', {
         parent_id: parseInt(parentId),
         child_id: parseInt(childId),
-        gate_id: selectedGate
+        gate_id: 1 // Default gate ID
       })
 
       if (response.success) {
@@ -179,96 +186,87 @@ export default function Scan() {
         loadLogs()
       }
     } catch (error) {
-      showToast(error.message || 'Manual entry failed', 'error')
-      showResult({
-        status: 'denied',
-        reason: error.message
-      })
+      if (error.message === 'Invalid token') {
+        logout()
+      } else {
+        showToast(error.message || 'Manual entry failed', 'error')
+        showResult({
+          status: 'denied',
+          reason: error.message
+        })
+      }
     }
   }
 
   return (
     <ProtectedRoute allowedRoles={['guard']}>
-      <div id="guard-dashboard" className="min-h-screen bg-gray-100">
-        <div className="max-w-6xl mx-auto py-6 px-4">
-          <h1 className="text-3xl font-bold mb-6">Guard Dashboard</h1>
+      <div className="container">
+        <h1 className="page-title">Guard Dashboard</h1>
 
-          {/* Navigation */}
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <nav className="flex space-x-4">
-              <button
-                className={`nav-btn px-4 py-2 rounded ${currentView === 'scanner' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                data-view="scanner"
-                onClick={() => switchView('scanner')}
-              >
-                Scanner
-              </button>
-              <button
-                className={`nav-btn px-4 py-2 rounded ${currentView === 'logs' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                data-view="logs"
-                onClick={() => switchView('logs')}
-              >
-                Logs
-              </button>
-              <button
-                className={`nav-btn px-4 py-2 rounded ${currentView === 'analytics' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                data-view="analytics"
-                onClick={() => switchView('analytics')}
-              >
-                Analytics
-              </button>
-              <button
-                className={`nav-btn px-4 py-2 rounded ${currentView === 'manual' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                data-view="manual"
-                onClick={() => switchView('manual')}
-              >
-                Manual Entry
-              </button>
-            </nav>
-          </div>
+        {/* Navigation */}
+        <div className="cta-row">
+          <button
+            className="ghost-pill"
+            onClick={() => switchView('scanner')}
+          >
+            <span className="emoji">📱</span> Scanner
+          </button>
+          <button
+            className="ghost-pill"
+            onClick={() => switchView('logs')}
+          >
+            <span className="emoji">📋</span> Logs
+          </button>
+          <button
+            className="ghost-pill"
+            onClick={() => switchView('analytics')}
+          >
+            <span className="emoji">📊</span> Analytics
+          </button>
+          <button
+            className="ghost-pill"
+            onClick={() => switchView('manual')}
+          >
+            <span className="emoji">✏️</span> Manual Entry
+          </button>
+        </div>
 
-          {/* Views */}
-          <div className="views">
-            {/* Scanner View */}
-            {currentView === 'scanner' && (
-              <div className="view scanner-view bg-white p-6 rounded-lg shadow mb-6">
-                <h2 className="text-xl font-semibold mb-4">Select Gate</h2>
-                <select
-                  value={selectedGate}
-                  onChange={(e) => setSelectedGate(e.target.value)}
-                  className="border p-2 rounded mb-4"
-                >
-                  <option value="">Select Gate</option>
-                  {gates?.gates?.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                </select>
+        {/* Views */}
+        <div className="card">
+          {/* Scanner View */}
+          {currentView === 'scanner' && (
+            <>
+              <h2 className="section-title">QR Code Scanner</h2>
 
-                <div className="flex space-x-4 mb-4">
-                  {!scanning ? (
-                    <button
-                      id="start-scan-btn"
-                      onClick={startScanner}
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    >
-                      Start Scanning
-                    </button>
-                  ) : (
-                    <button
-                      id="stop-scan-btn"
-                      onClick={stopScanner}
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                    >
-                      Stop Scanning
-                    </button>
-                  )}
-                </div>
-                <div id="qr-reader" className="mt-4"></div>
+              <div className="submit-row">
+                {!scanning ? (
+                  <button
+                    id="start-scan-btn"
+                    onClick={startScanner}
+                    className="big-btn"
+                  >
+                    Start Scanning
+                  </button>
+                ) : (
+                  <button
+                    id="stop-scan-btn"
+                    onClick={stopScanner}
+                    className="big-btn"
+                    style={{ background: '#dc2626' }}
+                  >
+                    Stop Scanning
+                  </button>
+                )}
               </div>
-            )}
+              <div id="qr-reader" className="mt-4"></div>
+            </>
+          )}
 
-            {/* Logs View */}
-            {currentView === 'logs' && (
-              <div className="view logs-view bg-white p-6 rounded-lg shadow mb-6">
-                <h2 className="text-xl font-semibold mb-4">Recent Logs</h2>
+          {/* Logs View */}
+          {currentView === 'logs' && (
+            <>
+              <h2 className="section-title">Recent Logs</h2>
+              <div className="gutter">
                 <table className="w-full border-collapse border border-gray-300">
                   <thead>
                     <tr>
@@ -302,12 +300,14 @@ export default function Scan() {
                   </tbody>
                 </table>
               </div>
-            )}
+            </>
+          )}
 
-            {/* Analytics View */}
-            {currentView === 'analytics' && (
-              <div className="view analytics-view bg-white p-6 rounded-lg shadow mb-6">
-                <h2 className="text-xl font-semibold mb-4">Analytics</h2>
+          {/* Analytics View */}
+          {currentView === 'analytics' && (
+            <>
+              <h2 className="section-title">Analytics</h2>
+              <div className="gutter">
                 {analytics ? (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 border rounded">
@@ -327,82 +327,86 @@ export default function Scan() {
                   <p>Loading analytics...</p>
                 )}
               </div>
-            )}
+            </>
+          )}
 
-            {/* Manual Entry View */}
-            {currentView === 'manual' && (
-              <div className="view manual-view bg-white p-6 rounded-lg shadow mb-6">
-                <h2 className="text-xl font-semibold mb-4">Manual Entry</h2>
-                <form id="manual-entry-form" onSubmit={handleManualEntry}>
-                  <div className="mb-4">
-                    <label className="block mb-2">Parent ID</label>
+          {/* Manual Entry View */}
+          {currentView === 'manual' && (
+            <>
+              <h2 className="section-title">Manual Entry</h2>
+              <form id="manual-entry-form" onSubmit={handleManualEntry}>
+                <div className="form-grid">
+                  <div className="form-item">
+                    <label>Parent ID</label>
                     <input
                       type="number"
                       name="parentId"
-                      className="border p-2 rounded w-full"
+                      className="input"
                       required
                     />
                   </div>
-                  <div className="mb-4">
-                    <label className="block mb-2">Child ID</label>
+                  <div className="form-item">
+                    <label>Child ID</label>
                     <input
                       type="number"
                       name="childId"
-                      className="border p-2 rounded w-full"
+                      className="input"
                       required
                     />
                   </div>
+                </div>
+                <div className="submit-row">
                   <button
                     type="submit"
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    className="submit-btn"
                   >
                     Record Entry
                   </button>
-                </form>
+                </div>
+              </form>
+            </>
+          )}
+        </div>
+
+        {/* Scan Result */}
+        {result && (
+          <div className="card" id="scan-result" style={{ background: result.status === 'approved' ? '#d1fae5' : '#fee2e2' }}>
+            <div id="result-status" className="flex items-center mb-4">
+              <span id="result-status-icon" className="text-2xl mr-2">
+                {result.status === 'approved' ? '✓' : '✗'}
+              </span>
+              <span id="result-status-text" className="text-xl font-semibold">
+                {result.status === 'approved' ? 'ACCESS GRANTED' : 'ACCESS DENIED'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <strong>Child:</strong> <span id="result-child-name">{result.child?.name || 'Unknown'}</span>
+              </div>
+              <div>
+                <strong>Parent:</strong> <span id="result-parent-name">{result.parent?.name || 'Unknown'}</span>
+              </div>
+              <div>
+                <strong>Phone:</strong> <span id="result-parent-phone">{result.parent?.phone || 'N/A'}</span>
+              </div>
+              <div>
+                <strong>Time:</strong> <span id="result-time">{new Date(result.timestamp).toLocaleString()}</span>
+              </div>
+            </div>
+            {result.reason && (
+              <div className="mt-4">
+                <strong>Reason:</strong> <span id="result-reason">{result.reason}</span>
               </div>
             )}
           </div>
+        )}
 
-          {/* Scan Result */}
-          {result && (
-            <div id="scan-result" className={`result-card p-6 rounded-lg shadow mb-6 ${result.status}`}>
-              <div id="result-status" className="flex items-center mb-4">
-                <span id="result-status-icon" className={`text-2xl mr-2 ${result.status}`}>
-                  {result.status === 'approved' ? '✓' : '✗'}
-                </span>
-                <span id="result-status-text" className="text-xl font-semibold">
-                  {result.status === 'approved' ? 'ACCESS GRANTED' : 'ACCESS DENIED'}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <strong>Child:</strong> <span id="result-child-name">{result.child?.name || 'Unknown'}</span>
-                </div>
-                <div>
-                  <strong>Parent:</strong> <span id="result-parent-name">{result.parent?.name || 'Unknown'}</span>
-                </div>
-                <div>
-                  <strong>Phone:</strong> <span id="result-parent-phone">{result.parent?.phone || 'N/A'}</span>
-                </div>
-                <div>
-                  <strong>Time:</strong> <span id="result-time">{new Date(result.timestamp).toLocaleString()}</span>
-                </div>
-              </div>
-              {result.reason && (
-                <div className="mt-4">
-                  <strong>Reason:</strong> <span id="result-reason">{result.reason}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Toast */}
-          {toast && (
-            <div className={`fixed top-4 right-4 p-4 rounded shadow ${toast.type === 'success' ? 'bg-green-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-blue-500'} text-white`}>
-              {toast.message}
-            </div>
-          )}
-        </div>
+        {/* Toast */}
+        {toast && (
+          <div className={`fixed top-4 right-4 p-4 rounded shadow ${toast.type === 'success' ? 'bg-green-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-blue-500'} text-white z-50`}>
+            {toast.message}
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   )
