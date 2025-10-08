@@ -14,7 +14,8 @@ const fetcher = async (url) => {
 }
 
 export default function History() {
-  const { data: logs, error } = useSWR('/api/logs', fetcher)
+  const { data: response, error } = useSWR('/api/logs', fetcher)
+  const logs = response?.logs || []
   const [filter, setFilter] = useState('')
   const [sortKey, setSortKey] = useState('timestamp')
   const [sortDirection, setSortDirection] = useState('desc')
@@ -28,7 +29,7 @@ export default function History() {
     }
   }
 
-  const filteredLogs = logs?.filter(log =>
+  const filteredLogs = logs.filter(log =>
     !filter || log.child_name.toLowerCase().includes(filter.toLowerCase())
   ).sort((a, b) => {
     let aVal = a[sortKey]
@@ -40,7 +41,7 @@ export default function History() {
     if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
     if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
     return 0
-  }) || []
+  })
 
   return (
     <ProtectedRoute allowedRoles={['parent', 'admin']}>
