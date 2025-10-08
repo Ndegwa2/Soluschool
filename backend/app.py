@@ -95,7 +95,7 @@ else:
     sms = None
 
 # Encryption key for QR
-encryption_key = os.getenv('ENCRYPTION_KEY', Fernet.generate_key())
+encryption_key = os.getenv('ENCRYPTION_KEY', b'your-fixed-encryption-key-here-change-in-prod')
 cipher = Fernet(encryption_key)
 
 # Schemas
@@ -322,8 +322,8 @@ def revoke_qr(qr_id):
 def verify_scan():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    if user.role not in ['guard', 'admin']:
-        return jsonify({'success': False, 'error': 'Only guards can scan'}), 403
+    if user.role not in ['guard', 'admin', 'parent']:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
 
     schema = ScanSchema()
     try:
@@ -396,8 +396,8 @@ def verify_scan():
 def manual_entry():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    if user.role not in ['guard', 'admin']:
-        return jsonify({'success': False, 'error': 'Only guards can do manual entry'}), 403
+    if user.role not in ['guard', 'admin', 'parent']:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
 
     schema = ManualEntrySchema()
     try:
