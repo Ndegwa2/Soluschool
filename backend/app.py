@@ -95,7 +95,7 @@ else:
     sms = None
 
 # Encryption key for QR
-encryption_key = os.getenv('ENCRYPTION_KEY', b'your-fixed-encryption-key-here-change-in-prod')
+encryption_key = os.getenv('ENCRYPTION_KEY', 'B_Gn8KSz8IyVMwW_hIGA_LiyPeYR5E1XawIRlDmM348=')
 cipher = Fernet(encryption_key)
 
 # Schemas
