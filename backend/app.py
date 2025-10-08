@@ -101,7 +101,7 @@ cipher = Fernet(encryption_key)
 # Schemas
 class ChildSchema(Schema):
     name = fields.Str(required=True)
-    school_id = fields.Int(required=True)
+    school_id = fields.Int(allow_none=True)
     grade = fields.Str(allow_none=True)
     date_of_birth = fields.Date(allow_none=True)
 
@@ -331,34 +331,51 @@ def verify_scan():
     except ValidationError as err:
         return jsonify({'success': False, 'error': err.messages}), 422
 
-    # Decrypt QR data
-    try:
-        encrypted_data = base64.b64decode(data['qr_data'])
-        decrypted_data = cipher.decrypt(encrypted_data)
-        qr_info = json.loads(decrypted_data.decode())
-    except Exception as e:
-        app.logger.warning(f'Invalid QR data received: {e}')
-        return jsonify({'success': False, 'status': 'denied', 'error': 'Invalid QR'}), 400
+    qr_data = data['qr_data']
 
-    # Validate
-    now = datetime.utcnow()
-    if qr_info.get('expires_at'):
-        expires = datetime.fromisoformat(qr_info['expires_at'])
-        if now > expires:
-            status = 'denied'
-            notes = 'Expired'
+    # Check if qr_data is a plain child_id (numeric string)
+    if qr_data.isdigit():
+        child_id = int(qr_data)
+        child = Child.query.get(child_id)
+        if not child:
+            return jsonify({'success': False, 'status': 'denied', 'error': 'Child not found'}), 400
+        # Check if child is in guard's school
+        if child.school_id != user.school_id:
+            return jsonify({'success': False, 'status': 'denied', 'error': 'Child not in your school'}), 403
+        # For plain child_id, always approve (no expiration)
+        status = 'approved'
+        notes = 'Scanned child ID'
+        qr_info = {'child_id': child_id, 'is_guest': False}
+        qr = None  # No QR record for plain child_id
+    else:
+        # Decrypt QR data
+        try:
+            encrypted_data = base64.b64decode(qr_data)
+            decrypted_data = cipher.decrypt(encrypted_data)
+            qr_info = json.loads(decrypted_data.decode())
+        except Exception as e:
+            app.logger.warning(f'Invalid QR data received: {e}')
+            return jsonify({'success': False, 'status': 'denied', 'error': 'Invalid QR'}), 400
+
+        # Validate
+        now = datetime.utcnow()
+        if qr_info.get('expires_at'):
+            expires = datetime.fromisoformat(qr_info['expires_at'])
+            if now > expires:
+                status = 'denied'
+                notes = 'Expired'
+            else:
+                status = 'approved'
+                notes = None
         else:
             status = 'approved'
             notes = None
-    else:
-        status = 'approved'
-        notes = None
 
-    # Check if QR is active in DB
-    qr = QRCode.query.filter_by(qr_data=base64.b64encode(encrypted_data).decode(), is_active=True).first()
-    if not qr:
-        status = 'denied'
-        notes = 'Inactive QR'
+        # Check if QR is active in DB
+        qr = QRCode.query.filter_by(qr_data=base64.b64encode(encrypted_data).decode(), is_active=True).first()
+        if not qr:
+            status = 'denied'
+            notes = 'Inactive QR'
 
     # Log the scan
     log = Log(
@@ -702,10 +719,19 @@ def create_child():
     if user.role != 'parent':
         return jsonify({'success': False, 'error': 'Parent only'}), 403
 
+    app.logger.info(f'Creating child for user {user_id}, user.school_id: {user.school_id}')
+    request_data = request.get_json()
+    app.logger.info(f'Request data: {request_data}')
+
+    # If school_id not provided or null, set to default school 1 (assuming single school system)
+    if not request_data.get('school_id') or request_data.get('school_id') is None:
+        request_data['school_id'] = 1
+
     schema = ChildSchema()
     try:
-        data = schema.load(request.get_json())
+        data = schema.load(request_data)
     except ValidationError as err:
+        app.logger.error(f'Validation error: {err.messages}')
         return jsonify({'success': False, 'error': err.messages}), 422
 
     child = Child(
@@ -740,6 +766,22 @@ def get_children():
 
     result = [{'id': c.id, 'name': c.name, 'school_id': c.school_id, 'grade': c.grade, 'date_of_birth': c.date_of_birth.isoformat() if c.date_of_birth else None} for c in children]
     return jsonify({'success': True, 'children': result})
+
+@app.route('/api/children/<int:child_id>', methods=['DELETE'])
+@jwt_required()
+def delete_child(child_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user.role != 'parent':
+        return jsonify({'success': False, 'error': 'Parent only'}), 403
+
+    child = Child.query.filter_by(id=child_id, parent_id=user_id).first()
+    if not child:
+        return jsonify({'success': False, 'error': 'Child not found'}), 404
+
+    db.session.delete(child)
+    db.session.commit()
+    return jsonify({'success': True})
 
 
 @app.route('/api/health')

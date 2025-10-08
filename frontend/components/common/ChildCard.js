@@ -1,35 +1,53 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import QRCode from 'qrcode'
 
 const ChildCard = ({ child, onEdit, onDelete }) => {
+  const [qrCodeUrl, setQrCodeUrl] = useState('')
+
+  useEffect(() => {
+    const generateQR = async () => {
+      try {
+        const url = await QRCode.toDataURL(child.id.toString())
+        setQrCodeUrl(url)
+      } catch (err) {
+        console.error('Error generating QR code:', err)
+      }
+    }
+    generateQR()
+  }, [child.id])
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow border">
-      <div className="flex items-center space-x-4">
-        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-          {child.photo ? (
-            <img src={child.photo} alt={child.name} className="w-12 h-12 rounded-full" />
-          ) : (
-            <span className="text-gray-600">{child.name.charAt(0)}</span>
-          )}
+    <div className="child-card">
+      <h2>{child.name}</h2>
+      <span className="grade-badge">Grade {child.grade}</span>
+      {qrCodeUrl && (
+        <div className="qr-code-container">
+          <img src={qrCodeUrl} alt={`QR Code for ${child.name}`} className="qr-code" />
         </div>
-        <div className="flex-1">
-          <h3 className="font-semibold">{child.name}</h3>
-          <p className="text-sm text-gray-600">Class: {child.class}</p>
-          <p className="text-sm text-gray-600">Status: {child.status}</p>
-        </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => onEdit(child)}
-            className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete(child.id)}
-            className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-          >
-            Delete
-          </button>
-        </div>
+      )}
+      <div className="card-actions">
+        <button
+          onClick={() => onEdit(child)}
+          className="icon-btn edit-btn"
+          title="Edit child"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <button
+          onClick={() => onDelete(child.id)}
+          className="icon-btn delete-btn"
+          title="Delete child"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M10 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
     </div>
   )
