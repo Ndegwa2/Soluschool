@@ -17,11 +17,11 @@ export default function History() {
   const { data: response, error } = useSWR('/api/logs', fetcher)
   const logs = response?.logs || []
 
-  // Dummy data for demonstration - only showing current parent's children
+  // Dummy data for demonstration
   const dummyLogs = [
     {
       id: 1,
-      child_name: 'Emma Johnson',
+      child_name: 'Alice Johnson',
       gate_name: 'Main Gate',
       timestamp: '2025-11-18T08:30:00Z',
       status: 'approved',
@@ -29,7 +29,7 @@ export default function History() {
     },
     {
       id: 2,
-      child_name: 'Emma Johnson',
+      child_name: 'Bob Smith',
       gate_name: 'Side Gate',
       timestamp: '2025-11-18T15:45:00Z',
       status: 'approved',
@@ -37,7 +37,7 @@ export default function History() {
     },
     {
       id: 3,
-      child_name: 'Liam Johnson',
+      child_name: 'Charlie Brown',
       gate_name: 'Main Gate',
       timestamp: '2025-11-17T16:20:00Z',
       status: 'denied',
@@ -45,7 +45,7 @@ export default function History() {
     },
     {
       id: 4,
-      child_name: 'Emma Johnson',
+      child_name: 'Diana Prince',
       gate_name: 'Back Gate',
       timestamp: '2025-11-17T14:10:00Z',
       status: 'approved',
@@ -53,7 +53,7 @@ export default function History() {
     },
     {
       id: 5,
-      child_name: 'Liam Johnson',
+      child_name: 'Eve Wilson',
       gate_name: 'Main Gate',
       timestamp: '2025-11-16T17:00:00Z',
       status: 'approved',

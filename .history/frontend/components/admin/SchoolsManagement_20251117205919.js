@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import useSWR from 'swr'
 import { apiClient } from '../../lib/api'
+import { getUserId } from '../../lib/auth'
 
 const fetcher = async (url) => {
   const response = await apiClient.get(url)
@@ -12,7 +13,7 @@ const fetcher = async (url) => {
 }
 
 export default function SchoolsManagement() {
-  const { data: schoolsData, error, mutate } = useSWR('/api/schools?adminId=12', fetcher)
+  const { data: schoolsData, error, mutate } = useSWR('/api/schools', fetcher)
   const [selectedSchools, setSelectedSchools] = useState([])
   const [activeFilter, setActiveFilter] = useState('All')
   const [selectedSchool, setSelectedSchool] = useState(null)
@@ -70,75 +71,17 @@ export default function SchoolsManagement() {
     }
   }
 
-  if (error) {
-    return (
-      <div style={{
-        position: 'absolute',
-        left: '240px',
-        top: '24px',
-        right: '24px',
-        backgroundColor: '#f3f4f6',
-        minHeight: '100vh',
-        padding: '24px'
-      }}>
-        <div style={{
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fca5a5',
-          borderRadius: '8px',
-          padding: '16px',
-          color: '#dc2626'
-        }}>
-          Error loading schools: {error.message}
-        </div>
-      </div>
-    )
-  }
-
-  if (!schoolsData) {
-    return (
-      <div style={{
-        position: 'absolute',
-        left: '240px',
-        top: '24px',
-        right: '24px',
-        backgroundColor: '#f3f4f6',
-        minHeight: '100vh',
-        padding: '24px'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-          <div>Loading schools...</div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div style={{
-      position: 'absolute',
-      left: '240px',
-      top: '24px',
-      right: '24px',
-      backgroundColor: '#f3f4f6',
-      minHeight: '100vh'
-    }}>
+    <div style={{ padding: '24px', backgroundColor: '#f3f4f6', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <text style={{
-          fontSize: '22px',
-          fontWeight: '700',
-          fill: '#111827',
-          fontFamily: 'Inter, Arial, sans-serif'
-        }}>Schools</text>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#111827', margin: 0, fontFamily: 'Inter, Arial, sans-serif' }}>Schools</h1>
         <button style={{
-          position: 'absolute',
-          left: '800px',
-          top: '-6px',
           backgroundColor: '#0f62fe',
           color: '#ffffff',
           border: 'none',
           borderRadius: '10px',
-          width: '120px',
-          height: '36px',
+          padding: '12px 20px',
           fontSize: '13px',
           fontWeight: '600',
           cursor: 'pointer',
@@ -153,12 +96,8 @@ export default function SchoolsManagement() {
         backgroundColor: '#ffffff',
         borderRadius: '12px',
         border: '1px solid #e6e7ea',
-        width: '640px',
-        height: '44px',
-        marginBottom: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 16px'
+        padding: '16px',
+        marginBottom: '24px'
       }}>
         <input
           type="text"
@@ -174,148 +113,89 @@ export default function SchoolsManagement() {
         />
       </div>
 
-      {/* Filters and bulk upload */}
-      <div style={{ marginBottom: '24px' }}>
-        {/* Filter chips */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {[
-            { key: 'All', width: '110px' },
-            { key: 'Active', width: '120px' },
-            { key: 'Pending', width: '120px' },
-            { key: 'Blocked', width: '120px' }
-          ].map((filter, index) => (
-            <button
-              key={filter.key}
-              onClick={() => setActiveFilter(filter.key)}
-              style={{
-                backgroundColor: activeFilter === filter.key ? '#e6f4ff' : '#ffffff',
-                border: activeFilter === filter.key ? '1px solid #c8e1ff' : '1px solid #e6e7ea',
-                borderRadius: '999px',
-                width: filter.width,
-                height: '32px',
-                fontSize: '12px',
-                fontWeight: activeFilter === filter.key ? '700' : '500',
-                color: activeFilter === filter.key ? '#0456d6' : '#374151',
-                cursor: 'pointer',
-                fontFamily: 'Inter, Arial, sans-serif',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {filter.key}
-            </button>
-          ))}
-        </div>
+      {/* Filter Chips and Bulk Upload */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', alignItems: 'center' }}>
+        {['All', 'Active', 'Pending', 'Blocked'].map(filter => (
+          <button
+            key={filter}
+            onClick={() => setActiveFilter(filter)}
+            style={{
+              backgroundColor: activeFilter === filter ? '#e6f4ff' : '#ffffff',
+              border: activeFilter === filter ? '1px solid #c8e1ff' : '1px solid #e6e7ea',
+              borderRadius: '999px',
+              padding: '8px 16px',
+              fontSize: '12px',
+              fontWeight: activeFilter === filter ? '700' : '500',
+              color: activeFilter === filter ? '#0456d6' : '#374151',
+              cursor: 'pointer',
+              fontFamily: 'Inter, Arial, sans-serif'
+            }}
+          >
+            {filter}
+          </button>
+        ))}
 
-        {/* Bulk upload */}
+        {/* Bulk Upload */}
         <div style={{
-          position: 'absolute',
-          left: '800px',
-          top: '104px',
           backgroundColor: '#f3f4f6',
           borderRadius: '8px',
           border: '1px solid #e6e7ea',
-          width: '180px',
-          height: '36px',
+          padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
-          padding: '0 16px',
-          gap: '12px'
+          gap: '12px',
+          marginLeft: 'auto'
         }}>
           <span>📁</span>
           <span style={{ fontSize: '13px', color: '#374151', fontFamily: 'Inter, Arial, sans-serif' }}>Bulk upload (CSV, XLSX)</span>
         </div>
       </div>
 
-      {/* Stats cards */}
-      <div style={{ marginBottom: '24px', display: 'flex', gap: '20px' }}>
+      {/* Stats Cards */}
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '12px',
           border: '1px solid #e6e7ea',
-          width: '240px',
-          height: '84px',
-          padding: '16px 16px'
+          padding: '20px',
+          flex: 1
         }}>
-          <div style={{
-            fontSize: '13px',
-            color: '#6b7280',
-            marginBottom: '8px',
-            fontFamily: 'Inter, Arial, sans-serif'
-          }}>Total Schools</div>
-          <div style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#111827',
-            fontFamily: 'Inter, Arial, sans-serif'
-          }}>{stats.total}</div>
+          <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px', fontFamily: 'Inter, Arial, sans-serif' }}>Total Schools</div>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#111827', fontFamily: 'Inter, Arial, sans-serif' }}>{stats.total}</div>
         </div>
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '12px',
           border: '1px solid #e6e7ea',
-          width: '240px',
-          height: '84px',
-          padding: '16px 16px'
+          padding: '20px',
+          flex: 1
         }}>
-          <div style={{
-            fontSize: '13px',
-            color: '#6b7280',
-            marginBottom: '8px',
-            fontFamily: 'Inter, Arial, sans-serif'
-          }}>Active</div>
-          <div style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#111827',
-            fontFamily: 'Inter, Arial, sans-serif'
-          }}>{stats.active}</div>
+          <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px', fontFamily: 'Inter, Arial, sans-serif' }}>Active</div>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#111827', fontFamily: 'Inter, Arial, sans-serif' }}>{stats.active}</div>
         </div>
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '12px',
           border: '1px solid #e6e7ea',
-          width: '240px',
-          height: '84px',
-          padding: '16px 16px'
+          padding: '20px',
+          flex: 1
         }}>
-          <div style={{
-            fontSize: '13px',
-            color: '#6b7280',
-            marginBottom: '8px',
-            fontFamily: 'Inter, Arial, sans-serif'
-          }}>Pending</div>
-          <div style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#111827',
-            fontFamily: 'Inter, Arial, sans-serif'
-          }}>{stats.pending}</div>
+          <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px', fontFamily: 'Inter, Arial, sans-serif' }}>Pending</div>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#111827', fontFamily: 'Inter, Arial, sans-serif' }}>{stats.pending}</div>
         </div>
       </div>
 
-      {/* Table container */}
+      {/* Table */}
       <div style={{
         backgroundColor: '#ffffff',
         borderRadius: '12px',
         border: '1px solid #e6e7ea',
-        width: '760px',
-        height: '320px',
-        overflow: 'hidden',
-        position: 'relative'
+        overflow: 'hidden'
       }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #eef2f7' }}>
-              <th style={{
-                padding: '16px',
-                textAlign: 'left',
-                fontWeight: '600',
-                fontSize: '13px',
-                fontFamily: 'Inter, Arial, sans-serif',
-                color: '#111827'
-              }}>
+              <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '13px', fontFamily: 'Inter, Arial, sans-serif' }}>
                 <input
                   type="checkbox"
                   checked={selectedSchools.length === filteredSchools.length && filteredSchools.length > 0}
@@ -323,48 +203,21 @@ export default function SchoolsManagement() {
                   style={{ width: '20px', height: '20px' }}
                 />
               </th>
-              <th style={{
-                padding: '16px',
-                textAlign: 'left',
-                fontWeight: '600',
-                fontSize: '13px',
-                fontFamily: 'Inter, Arial, sans-serif',
-                color: '#111827'
-              }}>School</th>
-              <th style={{
-                padding: '16px',
-                textAlign: 'left',
-                fontWeight: '600',
-                fontSize: '13px',
-                fontFamily: 'Inter, Arial, sans-serif',
-                color: '#111827'
-              }}>Location</th>
-              <th style={{
-                padding: '16px',
-                textAlign: 'left',
-                fontWeight: '600',
-                fontSize: '13px',
-                fontFamily: 'Inter, Arial, sans-serif',
-                color: '#111827'
-              }}>Status</th>
-              <th style={{
-                padding: '16px',
-                textAlign: 'left',
-                fontWeight: '600',
-                fontSize: '13px',
-                fontFamily: 'Inter, Arial, sans-serif',
-                color: '#111827'
-              }}>Actions</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '13px', fontFamily: 'Inter, Arial, sans-serif' }}>School</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '13px', fontFamily: 'Inter, Arial, sans-serif' }}>Location</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '13px', fontFamily: 'Inter, Arial, sans-serif' }}>Status</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '13px', fontFamily: 'Inter, Arial, sans-serif' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredSchools.slice(0, 4).map((school, index) => (
+            {filteredSchools.map((school, index) => (
               <tr
                 key={school.id}
                 onClick={() => handleRowClick(school)}
                 style={{
+                  borderBottom: '1px solid #eef2f7',
                   cursor: 'pointer',
-                  height: '56px'
+                  backgroundColor: index % 2 === 0 ? '#ffffff' : '#f9fafb'
                 }}
               >
                 <td style={{ padding: '16px' }}>
@@ -378,18 +231,8 @@ export default function SchoolsManagement() {
                     style={{ width: '20px', height: '20px' }}
                   />
                 </td>
-                <td style={{
-                  padding: '16px',
-                  fontSize: '13px',
-                  color: '#374151',
-                  fontFamily: 'Inter, Arial, sans-serif'
-                }}>{school.name}</td>
-                <td style={{
-                  padding: '16px',
-                  fontSize: '12px',
-                  color: '#9ca3af',
-                  fontFamily: 'Inter, Arial, sans-serif'
-                }}>{school.address || 'No address'}</td>
+                <td style={{ padding: '16px', fontSize: '13px', color: '#374151', fontFamily: 'Inter, Arial, sans-serif' }}>{school.name}</td>
+                <td style={{ padding: '16px', fontSize: '12px', color: '#9ca3af', fontFamily: 'Inter, Arial, sans-serif' }}>{school.address || 'No address'}</td>
                 <td style={{ padding: '16px' }}>
                   <span style={{
                     padding: '4px 12px',
@@ -401,28 +244,27 @@ export default function SchoolsManagement() {
                     {school.status || 'Pending'}
                   </span>
                 </td>
-                <td style={{
-                  padding: '16px',
-                  fontSize: '12px',
-                  color: '#6b7280',
-                  fontFamily: 'Inter, Arial, sans-serif'
-                }}>
+                <td style={{ padding: '16px', fontSize: '12px', color: '#6b7280', fontFamily: 'Inter, Arial, sans-serif' }}>
                   Edit • Delete
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
 
-        {/* Pagination */}
-        <div style={{
-          position: 'absolute',
-          bottom: '16px',
-          right: '20px',
-          display: 'flex',
-          gap: '8px',
-          alignItems: 'center'
-        }}>
+      {/* Pagination */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: '24px',
+        padding: '16px',
+        backgroundColor: '#ffffff',
+        borderRadius: '8px',
+        border: '1px solid #e6e7ea'
+      }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button style={{
             backgroundColor: '#ffffff',
             border: '1px solid #e6e7ea',
@@ -465,19 +307,20 @@ export default function SchoolsManagement() {
         </div>
       </div>
 
-      {/* Slide-out panel */}
+      {/* Slide-out Panel */}
       {showSlidePanel && selectedSchool && (
         <div style={{
           position: 'fixed',
-          top: '36px',
-          right: '36px',
+          top: 0,
+          right: 0,
           width: '168px',
-          height: '648px',
+          height: '100vh',
           backgroundColor: '#ffffff',
-          border: '1px solid #e6e7ea',
-          borderRadius: '12px',
-          padding: '16px',
-          zIndex: 1000
+          borderLeft: '1px solid #e6e7ea',
+          boxShadow: '-4px 0 12px rgba(0,0,0,0.1)',
+          zIndex: 1000,
+          padding: '24px',
+          borderRadius: '12px 0 0 12px'
         }}>
           <h2 style={{
             fontSize: '16px',
@@ -610,8 +453,8 @@ export default function SchoolsManagement() {
             onClick={() => setShowSlidePanel(false)}
             style={{
               position: 'absolute',
-              top: '16px',
-              right: '16px',
+              top: '24px',
+              right: '24px',
               background: 'none',
               border: 'none',
               fontSize: '20px',
@@ -621,6 +464,19 @@ export default function SchoolsManagement() {
           >
             ×
           </button>
+        </div>
+      )}
+
+      {error && (
+        <div style={{
+          backgroundColor: '#fef2f2',
+          border: '1px solid #fca5a5',
+          borderRadius: '8px',
+          padding: '16px',
+          marginTop: '24px',
+          color: '#dc2626'
+        }}>
+          Error loading schools: {error.message}
         </div>
       )}
     </div>

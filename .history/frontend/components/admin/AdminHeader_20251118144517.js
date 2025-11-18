@@ -90,9 +90,6 @@ const AdminHeader = ({ activeTab }) => {
           </div>
         </div>
       </div>
-
-      {/* AI Chatbot */}
-      <AIChatbot />
     </div>
   )
 }

@@ -78,7 +78,7 @@ if not encryption_key:
         "Generate a secure key: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
     )
 
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)  # Set back to 1 day for development
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=2)  # Reduced from 1 day to 2 hours
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

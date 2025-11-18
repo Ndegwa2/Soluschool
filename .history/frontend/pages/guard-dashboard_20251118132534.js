@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { Html5Qrcode } from 'html5-qrcode'
 import useSWR from 'swr'
 import ProtectedRoute from '../components/common/ProtectedRoute'
@@ -202,9 +201,9 @@ export default function Scan() {
           <span className="logo-text">Qreet Platform</span>
         </div>
         <nav className="nav-links">
-          <Link href="/dashboard" className="nav-link active">Dashboard</Link>
-          <Link href="/users" className="nav-link">Users</Link>
-          <Link href="/history" className="nav-link">History</Link>
+          <a href="/dashboard" className="nav-link active">Dashboard</a>
+          <a href="/users" className="nav-link">Users</a>
+          <a href="/history" className="nav-link">History</a>
         </nav>
         <button className="logout-btn" onClick={logout}>Logout</button>
       </header>
@@ -244,35 +243,35 @@ export default function Scan() {
           </button>
         </div>
 
-        {/* Main Card */}
+        {/* Views */}
         <div className="card">
           {/* Scanner View */}
           {currentView === 'scanner' && (
-            <div className="scanner-section">
-              <div className="scanner-content">
-                <h2 className="scanner-title">QR Code Scanner</h2>
-                <p className="scanner-subtitle">
-                  Use your device camera to scan visitor or staff QR codes at the gate.
-                </p>
+            <>
+              <h2 className="section-title">QR Code Scanner</h2>
 
-                <div id="qr-reader" className="camera-placeholder">
-                  Camera preview will appear here
-                </div>
-
-                <button
-                  id="start-scan-btn"
-                  onClick={startScanner}
-                  className="start-scan-btn"
-                >
-                  Start Scanning
-                </button>
+              <div className="submit-row">
+                {!scanning ? (
+                  <button
+                    id="start-scan-btn"
+                    onClick={startScanner}
+                    className="big-btn"
+                  >
+                    Start Scanning
+                  </button>
+                ) : (
+                  <button
+                    id="stop-scan-btn"
+                    onClick={stopScanner}
+                    className="big-btn"
+                    style={{ background: '#dc2626' }}
+                  >
+                    Stop Scanning
+                  </button>
+                )}
               </div>
-
-              <div className="quick-stats">
-                <p className="stats-label">Today</p>
-                <p className="stats-value">24 check-ins • 3 alerts</p>
-              </div>
-            </div>
+              <div id="qr-reader" className="mt-4"></div>
+            </>
           )}
 
           {/* Logs View */}
@@ -318,96 +317,29 @@ export default function Scan() {
 
           {/* Analytics View */}
           {currentView === 'analytics' && (
-            <div className="min-h-screen bg-gray-50 p-8">
-              {/* Main Analytics Panel */}
-              <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-200 p-8">
-                {/* Header Section */}
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics</h1>
-                    <p className="text-sm text-gray-600">Overview of today's activity and visitor flow.</p>
-                  </div>
-
-                  {/* Date Range Chip */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-                    <span className="text-sm text-gray-900">Today · 00:00 – Now</span>
-                  </div>
-                </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex gap-4 mb-8">
-                  <button className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">
-                    Scanner
-                  </button>
-                  <button className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">
-                    Logs
-                  </button>
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-                    Analytics
-                  </button>
-                  <button className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">
-                    Manual Entry
-                  </button>
-                </div>
-
-                {/* KPI Cards */}
-                <div className="grid grid-cols-3 gap-6 mb-8">
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                    <div className="text-sm text-gray-600 mb-2">Total Pickups</div>
-                    <div className="text-3xl font-bold text-gray-900">{analytics?.total_pickups || 0}</div>
-                  </div>
-
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                    <div className="text-sm text-gray-600 mb-2">Peak Hour</div>
-                    <div className="text-3xl font-bold text-gray-900">
-                      {analytics?.peak_hour ? `${analytics.peak_hour}:00` : 'N/A'}
+            <>
+              <h2 className="section-title">Analytics</h2>
+              <div className="gutter">
+                {analytics ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 border rounded">
+                      <div className="text-2xl font-bold">{analytics.total_pickups || 0}</div>
+                      <div>Total Pickups</div>
+                    </div>
+                    <div className="p-4 border rounded">
+                      <div className="text-2xl font-bold">{analytics.peak_hour ? `${analytics.peak_hour}:00` : 'N/A'}</div>
+                      <div>Peak Hour</div>
+                    </div>
+                    <div className="p-4 border rounded">
+                      <div className="text-2xl font-bold">{analytics.visitors || 0}</div>
+                      <div>Visitors Today</div>
                     </div>
                   </div>
-
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                    <div className="text-sm text-gray-600 mb-2">Visitors Today</div>
-                    <div className="text-3xl font-bold text-gray-900">{analytics?.visitors || 0}</div>
-                  </div>
-                </div>
-
-                {/* Status Tag */}
-                <div className="flex justify-end mb-8">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                    <span className="text-sm text-gray-600">Guard Online · Scanner Idle</span>
-                  </div>
-                </div>
-
-                {/* Chart Area */}
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
-                  <div className="mb-4">
-                    <div className="text-sm font-semibold text-gray-900">Activity Over Time</div>
-                    <div className="text-xs text-gray-600">Daily check-ins chart (placeholder)</div>
-                  </div>
-
-                  {/* Placeholder Chart */}
-                  <div className="space-y-3">
-                    <div className="h-px bg-gray-200"></div>
-                    <div className="h-px bg-gray-100"></div>
-                    <div className="h-px bg-gray-100"></div>
-                    <svg className="w-full h-32" viewBox="0 0 1000 128">
-                      <polyline
-                        points="30,100 160,95 290,98 420,102 550,99 680,101 810,103 940,102"
-                        fill="none"
-                        stroke="#d1d5db"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Footer Tip */}
-                <div className="text-xs text-gray-600">
-                  Tip: Keep dashboard in full-screen mode for smoother monitoring.
-                </div>
+                ) : (
+                  <p>Loading analytics...</p>
+                )}
               </div>
-            </div>
+            </>
           )}
 
           {/* Manual Entry View */}
@@ -450,11 +382,7 @@ export default function Scan() {
 
         {/* Scan Result */}
         {result && (
-          <div className="card" id="scan-result" style={{
-            background: result.status === 'approved' ? 'var(--success)' : 'var(--error)',
-            color: 'white',
-            border: 'none'
-          }}>
+          <div className="card" id="scan-result" style={{ background: result.status === 'approved' ? '#d1fae5' : '#fee2e2' }}>
             <div id="result-status" className="flex items-center mb-4">
               <span id="result-status-icon" className="text-2xl mr-2">
                 {result.status === 'approved' ? '✓' : '✗'}
@@ -484,11 +412,6 @@ export default function Scan() {
             )}
           </div>
         )}
-
-        {/* Footer Note */}
-        <p className="footer-note">
-          Tip: Keep the guard dashboard open in full-screen mode for smoother scanning and monitoring.
-        </p>
 
         {/* Toast */}
         {toast && (

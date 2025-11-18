@@ -12,7 +12,7 @@ const fetcher = async (url) => {
 }
 
 export default function SchoolsManagement() {
-  const { data: schoolsData, error, mutate } = useSWR('/api/schools?adminId=12', fetcher)
+  const { data: schoolsData, error, mutate } = useSWR('/api/schools', fetcher)
   const [selectedSchools, setSelectedSchools] = useState([])
   const [activeFilter, setActiveFilter] = useState('All')
   const [selectedSchool, setSelectedSchool] = useState(null)
