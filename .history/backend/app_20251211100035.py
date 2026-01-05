@@ -1,7 +1,7 @@
 import logging
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
@@ -883,8 +883,6 @@ def get_schools():
                 app.logger.warning('No Authorization header provided')
                 return jsonify({'success': False, 'error': 'Missing Authorization header'}), 401
 
-            # Verify JWT before accessing identity
-            verify_jwt_in_request()
             user_id = get_jwt_identity()
             app.logger.info(f'JWT identity extracted: {user_id}')
 

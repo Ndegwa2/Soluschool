@@ -22,9 +22,7 @@ export const isAuthenticated = () => {
 
 export const getToken = () => {
   if (typeof window === 'undefined') return null
-  const token = localStorage.getItem('token')
-  console.log('getToken() called, token:', token ? 'Bearer ***' : 'None')
-  return token
+  return localStorage.getItem('token')
 }
 
 export const getUserRole = () => {

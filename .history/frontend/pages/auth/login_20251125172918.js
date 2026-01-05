@@ -10,7 +10,9 @@ export default function Login() {
   const { isAuth, role } = useAuth()
 
   useEffect(() => {
+    console.log('Login useEffect: isAuth:', isAuth, 'role:', role)
     if (isAuth) {
+      console.log('Redirecting based on role:', role)
       if (role === 'parent' || role === 'admin') {
         router.push('/dashboard')
       } else if (role === 'guard') {

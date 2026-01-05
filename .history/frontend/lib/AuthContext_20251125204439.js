@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { isAuthenticated, getUserRole, getUserSchoolId, logout } from './auth'
 
@@ -31,14 +31,13 @@ export const AuthProvider = ({ children }) => {
     return () => clearTimeout(timer)
   }, [])
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = () => {
     logout()
     setIsAuth(false)
     setRole(null)
     setSchoolId(null)
-    setIsLoading(false)
     router.push('/auth/login')
-  }, [router])
+  }
 
   const refreshAuth = () => {
     console.log('[AuthContext] refreshAuth called')

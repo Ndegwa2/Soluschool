@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useState } from 'react'
 import ProtectedRoute from '../components/common/ProtectedRoute'
 import AdminSidebar from '../components/admin/AdminSidebar'
@@ -13,7 +11,6 @@ import SystemConfig from '../components/admin/SystemConfig'
 import AdvancedAnalytics from '../components/admin/AdvancedAnalytics'
 import AuditManagement from '../components/admin/AuditManagement'
 import SchoolsManagement from '../components/admin/SchoolsManagement'
-import AIChatbot from '../components/admin/AIChatbot'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview')

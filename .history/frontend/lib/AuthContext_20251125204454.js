@@ -31,14 +31,13 @@ export const AuthProvider = ({ children }) => {
     return () => clearTimeout(timer)
   }, [])
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = () => {
     logout()
     setIsAuth(false)
     setRole(null)
     setSchoolId(null)
-    setIsLoading(false)
     router.push('/auth/login')
-  }, [router])
+  }
 
   const refreshAuth = () => {
     console.log('[AuthContext] refreshAuth called')

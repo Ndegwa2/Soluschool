@@ -30,7 +30,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
   }, [isAuth, role, router, allowedRoles])
 
-  if (isLoading || !isAuth || (allowedRoles.length > 0 && !allowedRoles.includes(role))) {
+  if (!isAuth || (allowedRoles.length > 0 && !allowedRoles.includes(role))) {
     return <div>Loading...</div>
   }
 

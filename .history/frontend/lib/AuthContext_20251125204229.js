@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { isAuthenticated, getUserRole, getUserSchoolId, logout } from './auth'
 
@@ -15,30 +15,22 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     console.log('[AuthContext] useEffect running - checking auth state')
-
-    // Delay auth check to ensure DOM and localStorage are ready
-    const timer = setTimeout(() => {
-      const auth = isAuthenticated()
-      const userRole = getUserRole()
-      const userSchoolId = getUserSchoolId()
-      console.log('[AuthContext] Auth state determined after delay:', { auth, userRole, userSchoolId })
-      setIsAuth(auth)
-      setRole(userRole)
-      setSchoolId(userSchoolId)
-      setIsLoading(false)
-    }, 100) // Small delay to ensure stability
-
-    return () => clearTimeout(timer)
+    const auth = isAuthenticated()
+    const userRole = getUserRole()
+    const userSchoolId = getUserSchoolId()
+    console.log('[AuthContext] Auth state determined:', { auth, userRole, userSchoolId })
+    setIsAuth(auth)
+    setRole(userRole)
+    setSchoolId(userSchoolId)
   }, [])
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = () => {
     logout()
     setIsAuth(false)
     setRole(null)
     setSchoolId(null)
-    setIsLoading(false)
     router.push('/auth/login')
-  }, [router])
+  }
 
   const refreshAuth = () => {
     console.log('[AuthContext] refreshAuth called')
@@ -52,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuth, role, schoolId, isLoading, logout: handleLogout, refreshAuth }}>
+    <AuthContext.Provider value={{ isAuth, role, schoolId, logout: handleLogout, refreshAuth }}>
       {children}
     </AuthContext.Provider>
   )

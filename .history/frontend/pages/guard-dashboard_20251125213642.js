@@ -325,7 +325,7 @@ export default function Scan() {
                 <div className="flex justify-between items-start mb-8">
                   <div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics</h1>
-                    <p className="text-sm text-gray-600">Overview of daily activity and visitor flow.</p>
+                    <p className="text-sm text-gray-600">Overview of today's activity and visitor flow.</p>
                   </div>
 
                   {/* Date Range Chip */}

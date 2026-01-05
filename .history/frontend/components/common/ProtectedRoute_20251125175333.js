@@ -1,11 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/router'
+import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { useAuth } from '../../lib/AuthContext'
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { isAuth, role, isLoading } = useAuth()
+  const { isAuth, role } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -30,7 +31,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
   }, [isAuth, role, router, allowedRoles])
 
-  if (isLoading || !isAuth || (allowedRoles.length > 0 && !allowedRoles.includes(role))) {
+  if (!isAuth || (allowedRoles.length > 0 && !allowedRoles.includes(role))) {
     return <div>Loading...</div>
   }
 

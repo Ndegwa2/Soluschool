@@ -14,9 +14,6 @@ const poppins = Poppins({
 function MyApp({ Component, pageProps }) {
   return (
     <div className={poppins.className}>
-      <Head>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
       <AuthProvider>
         <Header />
         <Component {...pageProps} />

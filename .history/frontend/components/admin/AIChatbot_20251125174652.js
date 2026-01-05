@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
+import React, { useState } from 'react'
+
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
